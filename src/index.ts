@@ -1,19 +1,8 @@
-import { Application, Container, Sprite } from "pixi.js";
+import { Manager } from "./Manager";
+import { LoaderScene } from "./scenes/LoaderScene";
 
-const app = new Application({
-  view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
-  resolution: window.devicePixelRatio || 1,
-  autoDensity: true,
-  backgroundColor: 0x6495ed,
-  width: 640,
-  height: 480,
-});
+Manager.initialize(640, 480, 0x6495ed);
 
-const container = new Container();
-app.stage.addChild(container);
-
-const player: Sprite = Sprite.from("player.png");
-player.x = app.screen.width / 2;
-player.y = app.screen.height / 2;
-player.anchor.set(0.5);
-container.addChild(player);
+// We no longer need to tell the scene the size because we can ask Manager!
+const loady: LoaderScene = new LoaderScene();
+Manager.changeScene(loady);
