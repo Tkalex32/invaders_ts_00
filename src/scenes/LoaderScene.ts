@@ -1,8 +1,7 @@
 import { Container, Graphics, Loader, Text } from "pixi.js";
 import { assets } from "../assets";
 import { IScene, Manager } from "../Manager";
-// import { GameScene } from "./GameScene";
-// import { WelcomeScreen } from "./WelcomeScreen";
+import { WelcomeScreen } from "./WelcomeScreen";
 
 export class LoaderScene extends Container implements IScene {
   private loaderBar: Container;
@@ -56,17 +55,16 @@ export class LoaderScene extends Container implements IScene {
   private downloadProgress(loader: Loader): void {
     const progressRatio = loader.progress / 100;
     this.loaderBarFill.scale.x = progressRatio;
-    console.log(`progress: ${loader.progress}`);
+    // console.log(`progress: ${loader.progress}`);
   }
 
   private gameLoaded(): void {
-    // Change scene to the game scene!
-    console.log("Game loaded!");
-
-    // Manager.changeScene(new WelcomeScreen());
+    // console.log("Loaded!");
+    // Change scene
+    Manager.changeScene(new WelcomeScreen());
   }
 
   public update(_framesPassed: number): void {
-    // To be a scene we must have the update method even if we don't use it.
+    // must have the update method (even if we don't use it)
   }
 }
