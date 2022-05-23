@@ -27,7 +27,7 @@ export class Manager {
 
     Manager.app = new Application({
       view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
-      resolution: 1,
+      resolution: 4,
       autoDensity: true,
       backgroundColor: background,
       width: width,

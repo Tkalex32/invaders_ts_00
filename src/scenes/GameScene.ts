@@ -77,6 +77,7 @@ export class GameScene extends Container implements IScene {
       this.scoreLabel
     );
   }
+
   private effectPlay = (audio: HTMLAudioElement, volume: number = 1) => {
     audio.pause();
     audio.currentTime = 0;

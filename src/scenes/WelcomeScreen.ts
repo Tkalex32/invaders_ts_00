@@ -109,7 +109,6 @@ export class WelcomeScreen extends Container implements IScene {
   }
 
   public update(_framesPassed: number): void {
-    // must have the update method (even if we don't use it)
     this.movePlayer();
     this.moveBullet();
     this.moveEnemy();
