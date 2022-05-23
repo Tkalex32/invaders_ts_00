@@ -42,12 +42,12 @@ export class LoseScene extends Container implements IScene {
 
     this.startButton.on("pointerover", () => {
       this.startButton.tint = 0xcc9933;
-      this.startButtonText.tint = 0x7d5d1e;
+      this.startButtonText.style.fill = 0xffffff;
     });
 
     this.startButton.on("pointerout", () => {
       this.startButton.tint = 0xffffff;
-      this.startButtonText.tint = 0xcc9933;
+      this.startButtonText.style.fill = 0xcc9933;
     });
 
     this.startButton.addChild(this.startButtonText);

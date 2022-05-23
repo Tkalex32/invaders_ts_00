@@ -50,7 +50,7 @@ export class GameScene extends Container implements IScene {
     this.addEventListeners();
 
     [...Array(this.enemyCount)].forEach((_, index) => {
-      const enemy = new EnemyShip();
+      const enemy: EnemyShip = new EnemyShip();
       enemy.position.x = index * 65 + 30;
       enemy.position.y = 40;
       enemy.scale.set(0.8);
@@ -130,7 +130,7 @@ export class GameScene extends Container implements IScene {
       const currentTime: number = Date.now();
 
       if (currentTime - this.lastBulletSpawnTime > this.spawnSpeed) {
-        const bullet = new Bullet();
+        const bullet: Bullet = new Bullet();
         bullet.position.x = this.player.position.x;
         bullet.position.y = this.player.position.y;
         bullet.scale.x = 0.25;

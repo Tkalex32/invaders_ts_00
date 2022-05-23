@@ -39,9 +39,7 @@ export class LoaderScene extends Container implements IScene {
     this.loaderText.x = this.loaderBarWidth / 2;
     this.loaderText.y = 35;
     this.loaderText.anchor.set(0.5);
-    // this.loaderText.resolution = 2;
     this.loaderText.scale.set(0.5);
-    // this.loaderText.resolution = window.devicePixelRatio;
 
     this.loaderBar = new Container();
     this.loaderBar.addChild(this.loaderText);
