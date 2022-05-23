@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { Bullet } from "../elements/Bullet";
 import { IScene, Manager } from "../Manager";
 import { PlayerShip } from "../elements/PlayerShip";
@@ -6,11 +6,11 @@ import { EnemyShip } from "../elements/EnemyShip";
 import { GameScene } from "./GameScene";
 import { Button } from "../elements/hud/Button";
 import { ButtonText } from "../elements/hud/ButtonText";
+import { explosionFrames } from "../assets";
 
 export class WelcomeScreen extends Container implements IScene {
   private screenWidth: number;
   private screenHeight: number;
-  state: string;
   private background: Sprite = Sprite.from("bg.png");
   private startButton: Graphics = new Button();
   private startButtonText: ButtonText;
@@ -41,10 +41,30 @@ export class WelcomeScreen extends Container implements IScene {
     if (this.enemy.x < 20) this.enemySpeed = 1;
   };
 
+  explosionFrames: Array<String> = explosionFrames;
+
   public colission = (): void => {
     if (this.enemy.getBounds().intersects(this.bullet.getBounds())) {
       this.bullet.x = this.player.x;
       this.bullet.y = this.player.y;
+
+      let explosion: AnimatedSprite = new AnimatedSprite(
+        this.explosionFrames.map((str) => Texture.from(str as string))
+      );
+      explosion.x = this.enemy.x;
+      explosion.y = this.enemy.y;
+      explosion.anchor.set(0.5);
+      explosion.animationSpeed = 0.3;
+      explosion.scale.set(0.7);
+      explosion.loop = false;
+
+      explosion.play();
+      this.addChild(explosion);
+
+      explosion.onComplete = () => {
+        this.removeChild(explosion);
+      };
+
       this.enemy.x = Math.random() * this.screenWidth;
       this.enemy.y = Math.random() * 150 + 40;
     }
@@ -56,7 +76,6 @@ export class WelcomeScreen extends Container implements IScene {
     this.screenWidth = Manager.width;
     this.screenHeight = Manager.height;
     this.background.width = this.screenWidth;
-    this.state = "welcome";
 
     this.startButtonText = new ButtonText("Start", {
       fontFamily: "Arial",
@@ -104,7 +123,6 @@ export class WelcomeScreen extends Container implements IScene {
   }
 
   private startOnClick(): void {
-    // this.state = "play";
     Manager.changeScene(new GameScene());
   }
 

@@ -1,4 +1,10 @@
-import { Container, DisplayObject, Sprite } from "pixi.js";
+import {
+  AnimatedSprite,
+  Container,
+  DisplayObject,
+  Sprite,
+  Texture,
+} from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { Bullet } from "../elements/Bullet";
 import { EnemyShip } from "../elements/EnemyShip";
@@ -6,6 +12,7 @@ import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
 import { WinScene } from "./WinScene";
 import { LoseScene } from "./LoseScene";
+import { explosionFrames } from "../assets";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -97,12 +104,32 @@ export class GameScene extends Container implements IScene {
 
   private onKeyDown(e: KeyboardEvent): void {
     this.keysMaps[e.code] = true;
-    console.log(this.keysMaps, e.code);
   }
 
   private onKeyUp(e: KeyboardEvent): void {
     this.keysMaps[e.code] = false;
   }
+
+  explosionFrames: Array<String> = explosionFrames;
+
+  enemyExplosion = (x: number, y: number) => {
+    let explosion: AnimatedSprite = new AnimatedSprite(
+      this.explosionFrames.map((str) => Texture.from(str as string))
+    );
+    explosion.x = x;
+    explosion.y = y;
+    explosion.anchor.set(0.5);
+    explosion.animationSpeed = 0.3;
+    explosion.scale.set(0.7);
+    explosion.loop = false;
+
+    explosion.play();
+    this.addChild(explosion);
+
+    explosion.onComplete = () => {
+      this.removeChild(explosion);
+    };
+  };
 
   public update(delay: number): void {
     if (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) {
@@ -110,16 +137,19 @@ export class GameScene extends Container implements IScene {
         this.player.position.x -= delay * this.playerSpeed;
       }
     }
+
     if (this.keysMaps["ArrowRight"] || this.keysMaps["KeyD"]) {
       if (this.player.position.x < Manager.width - this.player.width + 10) {
         this.player.position.x += delay * this.playerSpeed;
       }
     }
+
     if (this.keysMaps["ArrowUp"] || this.keysMaps["KeyW"]) {
       if (this.player.position.y > 50) {
         this.player.position.y -= delay * this.playerSpeed;
       }
     }
+
     if (this.keysMaps["ArrowDown"] || this.keysMaps["KeyS"]) {
       if (this.player.position.y < Manager.height - this.player.height + 20) {
         this.player.position.y += delay * this.playerSpeed;
@@ -158,11 +188,11 @@ export class GameScene extends Container implements IScene {
 
       this.enemies.children.forEach((enemy: DisplayObject) => {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
+          this.enemyExplosion(enemy.position.x, enemy.position.y);
           this.effectPlay(this.explosionAudio, 0.01);
           this.enemies.removeChild(enemy);
           this.bullets.removeChild(bullet);
           this.enemiesLeft--;
-          console.log(this.enemiesLeft);
         }
       });
     });
@@ -173,6 +203,7 @@ export class GameScene extends Container implements IScene {
       if (enemy.position.y > Manager.height + 20) enemy.position.y = -30;
 
       if (enemy.getBounds().intersects(this.player.getBounds())) {
+        this.enemyExplosion(enemy.position.x, enemy.position.y);
         this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);
         this.playerLives--;

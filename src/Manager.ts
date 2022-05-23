@@ -17,11 +17,11 @@ export class Manager {
     return Manager._height;
   }
 
-  public static initialize(
+  public static initialize = (
     width: number,
     height: number,
     background: number
-  ): void {
+  ): void => {
     Manager._width = width;
     Manager._height = height;
 
@@ -35,9 +35,9 @@ export class Manager {
     });
 
     Manager.app.ticker.add(Manager.update);
-  }
+  };
 
-  public static changeScene(newScene: IScene): void {
+  public static changeScene = (newScene: IScene): void => {
     if (Manager.currentScene) {
       Manager.app.stage.removeChild(Manager.currentScene);
       Manager.currentScene.destroy();
@@ -45,13 +45,25 @@ export class Manager {
 
     Manager.currentScene = newScene;
     Manager.app.stage.addChild(Manager.currentScene);
-  }
+  };
 
-  private static update(framesPassed: number): void {
+  private static update = (framesPassed: number): void => {
     if (Manager.currentScene) {
       Manager.currentScene.update(framesPassed);
     }
-  }
+  };
+
+  public static getLocalStorage = (key: string): string | null => {
+    return localStorage.getItem(key);
+  };
+
+  public static setLocalStorage = (key: string, value: string): void => {
+    localStorage.setItem(key, value);
+  };
+
+  public static removeLocalStorage = (key: string): void => {
+    localStorage.removeItem(key);
+  };
 }
 
 export interface IScene extends DisplayObject {
