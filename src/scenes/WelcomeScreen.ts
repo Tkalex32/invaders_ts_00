@@ -1,17 +1,19 @@
-import { Container, Graphics, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { Bullet } from "../elements/Bullet";
 import { IScene, Manager } from "../Manager";
 import { PlayerShip } from "../elements/PlayerShip";
 import { EnemyShip } from "../elements/EnemyShip";
 import { GameScene } from "./GameScene";
+import { Button } from "../elements/hud/Button";
+import { ButtonText } from "../elements/hud/ButtonText";
 
 export class WelcomeScreen extends Container implements IScene {
   private screenWidth: number;
   private screenHeight: number;
-  private buttonColor: number;
   state: string;
-  private startButton: Graphics;
-  private startButtonText: Text;
+  private background: Sprite = Sprite.from("bg.png");
+  private startButton: Graphics = new Button();
+  private startButtonText: ButtonText;
   private player: Sprite;
   private bullet: Sprite;
   private enemy: Sprite;
@@ -51,37 +53,22 @@ export class WelcomeScreen extends Container implements IScene {
   constructor() {
     super();
 
-    const screenWidth = Manager.width;
-    const screenHeight = Manager.height;
-
-    this.screenWidth = screenWidth;
-    this.screenHeight = screenHeight;
-    this.buttonColor = 0xffffff;
+    this.screenWidth = Manager.width;
+    this.screenHeight = Manager.height;
+    this.background.width = this.screenWidth;
     this.state = "welcome";
 
-    this.startButton = new Graphics();
-    this.startButtonText = new Text("Start", {
+    this.startButtonText = new ButtonText("Start", {
       fontFamily: "Arial",
       fontSize: 36,
       fill: 0xcc9933,
       align: "center",
     });
 
-    this.startButton
-      .beginFill(this.buttonColor)
-      .lineStyle(2, 0xcc9933)
-      .drawRoundedRect(0, 0, 200, 50, 10)
-      .endFill();
     this.startButton.x = this.screenWidth / 2 - 100;
     this.startButton.y = this.screenHeight / 2 - 25;
 
-    this.startButtonText.x = 100;
-    this.startButtonText.y = 25;
-    this.startButtonText.anchor.set(0.5);
-
     this.startButton.on("click", this.startOnClick, this);
-    this.startButton.buttonMode = true;
-    this.startButton.interactive = true;
 
     this.startButton.on("pointerover", () => {
       this.startButton.tint = 0xcc9933;
@@ -107,7 +94,13 @@ export class WelcomeScreen extends Container implements IScene {
     this.bullet.scale.set(0.25);
 
     this.startButton.addChild(this.startButtonText);
-    this.addChild(this.player, this.bullet, this.enemy, this.startButton);
+    this.addChild(
+      this.background,
+      this.player,
+      this.bullet,
+      this.enemy,
+      this.startButton
+    );
   }
 
   private startOnClick(): void {

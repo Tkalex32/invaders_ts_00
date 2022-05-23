@@ -4,8 +4,12 @@ import { Bullet } from "../elements/Bullet";
 import { EnemyShip } from "../elements/EnemyShip";
 import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
+import { WinScene } from "./WinScene";
+import { LoseScene } from "./LoseScene";
 
 export class GameScene extends Container implements IScene {
+  private screenWidth: number;
+  private background: Sprite = Sprite.from("bg.png");
   private player: Sprite = new PlayerShip();
   private bullets: Container = new Container();
   private enemies: Container = new Container();
@@ -30,9 +34,19 @@ export class GameScene extends Container implements IScene {
   private enemyCount: number = 10;
   private playerLives: number = 3;
   private enemiesLeft: number = 10;
+  private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
+  private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
+  private winAudio: HTMLAudioElement = new Audio("win.mp3");
+  private loseAudio: HTMLAudioElement = new Audio("lose.mp3");
 
   constructor() {
     super();
+
+    this.screenWidth = Manager.width;
+    this.background.width = this.screenWidth;
+    this.winAudio.volume = 0.1;
+    this.loseAudio.volume = 0.1;
+
     this.addEventListeners();
 
     [...Array(this.enemyCount)].forEach((_, index) => {
@@ -47,14 +61,15 @@ export class GameScene extends Container implements IScene {
     this.player.x = Manager.width / 2;
     this.player.y = Manager.height - 20;
 
-    this.livesLabel.x = 50;
+    this.livesLabel.x = Manager.width - 50;
     this.livesLabel.y = 10;
     this.livesLabel.anchor.set(0.5);
-    this.scoreLabel.x = Manager.width - 50;
+    this.scoreLabel.x = 50;
     this.scoreLabel.y = 10;
     this.scoreLabel.anchor.set(0.5);
 
     this.addChild(
+      this.background,
       this.player,
       this.bullets,
       this.enemies,
@@ -62,6 +77,13 @@ export class GameScene extends Container implements IScene {
       this.scoreLabel
     );
   }
+  private effectPlay = (audio: HTMLAudioElement, volume: number = 1) => {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.volume = volume;
+    audio.play();
+  };
+
   public addEventListeners = (): void => {
     window.addEventListener("keydown", this.onKeyDown.bind(this), false);
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
@@ -112,7 +134,7 @@ export class GameScene extends Container implements IScene {
         bullet.position.y = this.player.position.y;
         bullet.scale.x = 0.25;
         bullet.scale.y = 0.25;
-        // effectPlay(laserAudio, 0.05);
+        this.effectPlay(this.laserAudio, 0.05);
         this.bullets.addChild(bullet);
 
         if (bullet.position.x < 0) {
@@ -135,7 +157,7 @@ export class GameScene extends Container implements IScene {
 
       this.enemies.children.forEach((enemy: DisplayObject) => {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
-          // effectPlay(explosionAudio, 0.01);
+          this.effectPlay(this.explosionAudio, 0.01);
           this.enemies.removeChild(enemy);
           this.bullets.removeChild(bullet);
           this.enemiesLeft--;
@@ -150,21 +172,45 @@ export class GameScene extends Container implements IScene {
       if (enemy.position.y > Manager.height + 20) enemy.position.y = -30;
 
       if (enemy.getBounds().intersects(this.player.getBounds())) {
-        // effectPlay(explosionAudio, 0.01);
+        this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);
         this.playerLives--;
         this.enemiesLeft--;
       }
     });
 
-    if (this.player.x > Manager.width) {
-      this.player.x = Manager.width;
-      this.playerSpeed = -this.playerSpeed;
+    if (this.enemiesLeft === 0) {
+      this.laserAudio.pause();
+      this.laserAudio.currentTime = 0;
+      this.explosionAudio.pause();
+      this.laserAudio.currentTime = 0;
+      // state = "end";
+      this.removeChild(
+        this.player,
+        this.bullets,
+        this.enemies,
+        this.livesLabel,
+        this.scoreLabel
+      );
+      Manager.changeScene(new WinScene());
+      this.winAudio.play();
     }
 
-    if (this.player.x < 0) {
-      this.player.x = 0;
-      this.playerSpeed = -this.playerSpeed;
+    if (this.playerLives === 0) {
+      this.laserAudio.pause();
+      this.laserAudio.currentTime = 0;
+      this.explosionAudio.pause();
+      this.laserAudio.currentTime = 0;
+      // state = "end";
+      this.removeChild(
+        this.player,
+        this.bullets,
+        this.enemies,
+        this.livesLabel,
+        this.scoreLabel
+      );
+      Manager.changeScene(new LoseScene());
+      this.loseAudio.play();
     }
   }
 }
