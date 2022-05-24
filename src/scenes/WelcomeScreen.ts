@@ -1,6 +1,13 @@
-import { AnimatedSprite, Container, Graphics, Sprite, Texture } from "pixi.js";
+import {
+  AnimatedSprite,
+  Container,
+  Graphics,
+  Sprite,
+  Text,
+  Texture,
+} from "pixi.js";
 import { Bullet } from "../elements/Bullet";
-import { IScene, Manager } from "../Manager";
+import { IScene, IStorage, Manager } from "../Manager";
 import { PlayerShip } from "../elements/PlayerShip";
 import { EnemyShip } from "../elements/EnemyShip";
 import { GameScene } from "./GameScene";
@@ -17,6 +24,8 @@ export class WelcomeScreen extends Container implements IScene {
   private player: Sprite;
   private bullet: Sprite;
   private enemy: Sprite;
+  private highScore: number = 0;
+  private highScoreText: Text;
   private playerSpeed: number = 1;
   private bulletSpeed: number = 5;
   private enemySpeed: number = 1;
@@ -70,12 +79,33 @@ export class WelcomeScreen extends Container implements IScene {
     }
   };
 
+  private getHighScore(): void {
+    const localData: IStorage = Manager.localStorageData;
+    if (localData.highScore) {
+      this.highScore = localData.highScore;
+    }
+  }
+
   constructor() {
     super();
+
+    this.getHighScore();
 
     this.screenWidth = Manager.width;
     this.screenHeight = Manager.height;
     this.background.width = this.screenWidth;
+
+    this.highScoreText = new Text(`High Score: ${this.highScore}`, {
+      fontFamily: "Arial",
+      fontSize: 20,
+      fill: "white",
+      align: "center",
+      stroke: "black",
+      strokeThickness: 2,
+    });
+    this.highScoreText.x = this.screenWidth / 2;
+    this.highScoreText.y = 20;
+    this.highScoreText.anchor.set(0.5);
 
     this.startButtonText = new ButtonText("Start", {
       fontFamily: "Arial",
@@ -118,7 +148,8 @@ export class WelcomeScreen extends Container implements IScene {
       this.player,
       this.bullet,
       this.enemy,
-      this.startButton
+      this.startButton,
+      this.highScoreText
     );
   }
 

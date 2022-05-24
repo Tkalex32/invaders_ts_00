@@ -9,6 +9,7 @@ export class Manager {
 
   private static _width: number;
   private static _height: number;
+  private static _localStorageData: IStorage;
 
   public static get width(): number {
     return Manager._width;
@@ -21,6 +22,10 @@ export class Manager {
     return Manager.app.ticker.started;
   }
 
+  public static get localStorageData(): IStorage {
+    return Manager._localStorageData;
+  }
+
   public static initialize = (
     width: number,
     height: number,
@@ -28,6 +33,10 @@ export class Manager {
   ): void => {
     Manager._width = width;
     Manager._height = height;
+    Manager._localStorageData = {
+      highScore: 0,
+      muteSFX: false,
+    };
 
     Manager.app = new Application({
       view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
@@ -55,6 +64,8 @@ export class Manager {
     if (Manager.currentScene) {
       Manager.currentScene.update(framesPassed);
     }
+
+    Manager.getLocalStorageData();
   };
 
   public static pause = (): void => {
@@ -65,19 +76,26 @@ export class Manager {
     Manager.app.ticker.start();
   };
 
-  public static getLocalStorage = (key: string): string | null => {
-    return localStorage.getItem(key);
+  public static getLocalStorageData = (): void => {
+    if (localStorage.getItem("invaders")) {
+      this._localStorageData = JSON.parse(
+        localStorage.getItem("invaders") as string
+      );
+    } else {
+      Manager.setLocalStorageData(this._localStorageData);
+      console.log(this._localStorageData);
+    }
   };
 
-  public static setLocalStorage = (key: string, value: string): void => {
-    localStorage.setItem(key, value);
-  };
-
-  public static removeLocalStorage = (key: string): void => {
-    localStorage.removeItem(key);
-  };
+  public static setLocalStorageData = (value: IStorage): void =>
+    localStorage.setItem("invaders", JSON.stringify(value));
 }
 
 export interface IScene extends DisplayObject {
   update(framesPassed: number): void;
+}
+
+export interface IStorage {
+  highScore: number;
+  muteSFX: boolean;
 }

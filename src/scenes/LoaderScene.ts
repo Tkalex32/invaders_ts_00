@@ -9,7 +9,7 @@ export class LoaderScene extends Container implements IScene {
   private loaderBarWidth: number;
   private background: Sprite = Sprite.from("bg.png");
   private loaderBar: Container;
-  private loaderBarBoder: Graphics;
+  private loaderBarBorder: Graphics;
   private loaderBarFill: Graphics;
   private loaderText: Text;
 
@@ -26,9 +26,9 @@ export class LoaderScene extends Container implements IScene {
     this.loaderBarFill.endFill();
     this.loaderBarFill.scale.x = 0;
 
-    this.loaderBarBoder = new Graphics();
-    this.loaderBarBoder.lineStyle(2, 0x4d4a7a, 1);
-    this.loaderBarBoder.drawRect(0, 0, this.loaderBarWidth, 20);
+    this.loaderBarBorder = new Graphics();
+    this.loaderBarBorder.lineStyle(2, 0x4d4a7a, 1);
+    this.loaderBarBorder.drawRect(0, 0, this.loaderBarWidth, 20);
 
     this.loaderText = new Text("Loading...", {
       fontFamily: "Arial",
@@ -42,9 +42,12 @@ export class LoaderScene extends Container implements IScene {
     this.loaderText.scale.set(0.5);
 
     this.loaderBar = new Container();
-    this.loaderBar.addChild(this.loaderText);
-    this.loaderBar.addChild(this.loaderBarFill);
-    this.loaderBar.addChild(this.loaderBarBoder);
+    this.loaderBar.addChild(
+      this.loaderText,
+      this.loaderBarFill,
+      this.loaderBarBorder
+    );
+
     this.loaderBar.position.x = (this.screenWidth - this.loaderBar.width) / 2;
     this.loaderBar.position.y = (this.screenHeight - this.loaderBar.height) / 2;
     this.addChild(this.background, this.loaderBar);

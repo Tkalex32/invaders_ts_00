@@ -14,6 +14,7 @@ import { WinScene } from "./WinScene";
 import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
+import { writeHighScore } from "../helpers/helpers";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -44,6 +45,7 @@ export class GameScene extends Container implements IScene {
   private enemyCount: number = 10;
   private playerLives: number = 3;
   private enemiesLeft: number = 10;
+  private score: number = 0;
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
@@ -116,7 +118,7 @@ export class GameScene extends Container implements IScene {
   explosionFrames: Array<String> = explosionFrames;
 
   enemyExplosion = (x: number, y: number) => {
-    let explosion: AnimatedSprite = new AnimatedSprite(
+    const explosion: AnimatedSprite = new AnimatedSprite(
       this.explosionFrames.map((str) => Texture.from(str as string))
     );
     explosion.x = x;
@@ -135,29 +137,29 @@ export class GameScene extends Container implements IScene {
   };
 
   public update(delay: number): void {
-    if (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) {
-      if (this.player.position.x > 20) {
-        this.player.position.x -= delay * this.playerSpeed;
-      }
-    }
+    if (
+      (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) &&
+      this.player.position.x > 20
+    )
+      this.player.position.x -= delay * this.playerSpeed;
 
-    if (this.keysMaps["ArrowRight"] || this.keysMaps["KeyD"]) {
-      if (this.player.position.x < Manager.width - this.player.width + 10) {
-        this.player.position.x += delay * this.playerSpeed;
-      }
-    }
+    if (
+      (this.keysMaps["ArrowRight"] || this.keysMaps["KeyD"]) &&
+      this.player.position.x < Manager.width - this.player.width + 10
+    )
+      this.player.position.x += delay * this.playerSpeed;
 
-    if (this.keysMaps["ArrowUp"] || this.keysMaps["KeyW"]) {
-      if (this.player.position.y > 50) {
-        this.player.position.y -= delay * this.playerSpeed;
-      }
-    }
+    if (
+      (this.keysMaps["ArrowUp"] || this.keysMaps["KeyW"]) &&
+      this.player.position.y > 50
+    )
+      this.player.position.y -= delay * this.playerSpeed;
 
-    if (this.keysMaps["ArrowDown"] || this.keysMaps["KeyS"]) {
-      if (this.player.position.y < Manager.height - this.player.height + 20) {
-        this.player.position.y += delay * this.playerSpeed;
-      }
-    }
+    if (
+      (this.keysMaps["ArrowDown"] || this.keysMaps["KeyS"]) &&
+      this.player.position.y < Manager.height - this.player.height + 20
+    )
+      this.player.position.y += delay * this.playerSpeed;
 
     if (this.keysMaps["KeyP"]) {
       Manager.pause();
@@ -182,23 +184,19 @@ export class GameScene extends Container implements IScene {
         this.effectPlay(this.laserAudio, 0.05);
         this.bullets.addChild(bullet);
 
-        if (bullet.position.x < 0) {
-          this.bullets.removeChild(bullet);
-        }
+        if (bullet.position.x < 0) this.bullets.removeChild(bullet);
 
         this.lastBulletSpawnTime = currentTime;
       }
     }
 
-    this.scoreLabel.text = `Score: ${this.enemyCount - this.enemiesLeft}`;
+    this.scoreLabel.text = `Score: ${this.score}`;
     this.livesLabel.text = `Lives: ${this.playerLives}`;
 
     this.bullets.children.forEach((bullet: DisplayObject) => {
       bullet.position.y -= this.bulletSpeed * delay;
 
-      if (bullet.position.y < 0) {
-        this.bullets.removeChild(bullet);
-      }
+      if (bullet.position.y < 0) this.bullets.removeChild(bullet);
 
       this.enemies.children.forEach((enemy: DisplayObject) => {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
@@ -207,6 +205,7 @@ export class GameScene extends Container implements IScene {
           this.enemies.removeChild(enemy);
           this.bullets.removeChild(bullet);
           this.enemiesLeft--;
+          this.score += 10;
         }
       });
     });
@@ -222,6 +221,7 @@ export class GameScene extends Container implements IScene {
         this.enemies.removeChild(enemy);
         this.playerLives--;
         this.enemiesLeft--;
+        this.score += 10;
       }
     });
 
@@ -230,6 +230,7 @@ export class GameScene extends Container implements IScene {
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
       this.laserAudio.currentTime = 0;
+      writeHighScore(this.score);
       this.removeChild(
         this.player,
         this.bullets,
@@ -246,6 +247,7 @@ export class GameScene extends Container implements IScene {
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
       this.laserAudio.currentTime = 0;
+      writeHighScore(this.score);
       this.removeChild(
         this.player,
         this.bullets,
