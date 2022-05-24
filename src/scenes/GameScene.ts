@@ -40,6 +40,7 @@ export class GameScene extends Container implements IScene {
   private lastBulletSpawnTime: number = 0;
   private spawnSpeed: number = 400;
   private keysMaps: { [key: string]: boolean } = {};
+  private playerRotation = 0;
   private playerSpeed: number = 4;
   private bulletSpeed: number = 15;
   private enemyCount: number = 10;
@@ -137,17 +138,23 @@ export class GameScene extends Container implements IScene {
   };
 
   public update(delay: number): void {
+    this.player.rotation = this.playerRotation;
+
     if (
       (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) &&
       this.player.position.x > 20
-    )
+    ) {
+      this.player.rotation -= 0.2;
       this.player.position.x -= delay * this.playerSpeed;
+    }
 
     if (
       (this.keysMaps["ArrowRight"] || this.keysMaps["KeyD"]) &&
       this.player.position.x < Manager.width - this.player.width + 10
-    )
+    ) {
+      this.player.rotation += 0.2;
       this.player.position.x += delay * this.playerSpeed;
+    }
 
     if (
       (this.keysMaps["ArrowUp"] || this.keysMaps["KeyW"]) &&

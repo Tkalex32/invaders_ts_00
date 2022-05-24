@@ -32,7 +32,9 @@ export class WelcomeScreen extends Container implements IScene {
 
   private movePlayer = (): void => {
     this.player.x += this.playerSpeed;
+
     if (this.player.x > this.screenWidth - 20) this.playerSpeed = -1;
+
     if (this.player.x < 20) this.playerSpeed = 1;
   };
 
