@@ -17,6 +17,10 @@ export class Manager {
     return Manager._height;
   }
 
+  public static get tickerState(): boolean {
+    return Manager.app.ticker.started;
+  }
+
   public static initialize = (
     width: number,
     height: number,
@@ -51,6 +55,14 @@ export class Manager {
     if (Manager.currentScene) {
       Manager.currentScene.update(framesPassed);
     }
+  };
+
+  public static pause = (): void => {
+    Manager.app.ticker.stop();
+  };
+
+  public static resume = (): void => {
+    Manager.app.ticker.start();
   };
 
   public static getLocalStorage = (key: string): string | null => {

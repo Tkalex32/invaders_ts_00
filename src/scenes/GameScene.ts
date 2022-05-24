@@ -13,9 +13,12 @@ import { Label } from "../elements/hud/Label";
 import { WinScene } from "./WinScene";
 import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
+import { PauseOverlay } from "../elements/hud/PauseOverlay";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
+  private pauseOverlay: PauseOverlay = new PauseOverlay();
+  private pause: boolean = false;
   private background: Sprite = Sprite.from("bg.png");
   private player: Sprite = new PlayerShip();
   private bullets: Container = new Container();
@@ -156,6 +159,17 @@ export class GameScene extends Container implements IScene {
       }
     }
 
+    if (this.keysMaps["KeyP"]) {
+      Manager.pause();
+      this.addChild(this.pauseOverlay);
+      this.pause = true;
+    }
+
+    if (Manager.tickerState && this.pause) {
+      this.removeChild(this.pauseOverlay);
+      this.pause = false;
+    }
+
     if (this.isMouseFlag || this.keysMaps["Space"]) {
       const currentTime: number = Date.now();
 
@@ -216,7 +230,6 @@ export class GameScene extends Container implements IScene {
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
       this.laserAudio.currentTime = 0;
-      // state = "end";
       this.removeChild(
         this.player,
         this.bullets,
@@ -233,7 +246,6 @@ export class GameScene extends Container implements IScene {
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
       this.laserAudio.currentTime = 0;
-      // state = "end";
       this.removeChild(
         this.player,
         this.bullets,
