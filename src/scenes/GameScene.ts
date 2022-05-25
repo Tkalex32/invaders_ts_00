@@ -15,6 +15,8 @@ import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
 import { writeHighScore } from "../helpers/helpers";
 import { Grid } from "../elements/Grid";
+import { EnemyBullet } from "../elements/EnemyBullet";
+import { EnemyShip } from "../elements/EnemyShip";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -53,6 +55,8 @@ export class GameScene extends Container implements IScene {
   private enemySpeed: number = 1;
   private score: number = 0;
   private vaweCount: number;
+  private frames: number;
+  private enemyBullets: EnemyBullet[];
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
@@ -77,6 +81,8 @@ export class GameScene extends Container implements IScene {
     this.enemies.y = this.startPos.y;
     this.enemyCount = this.enemies.enemies.length;
     this.vaweCount = 0;
+    this.enemyBullets = [];
+    this.frames = 0;
 
     this.player.anchor.set(0.5);
     this.player.x = Manager.width / 2;
@@ -147,6 +153,8 @@ export class GameScene extends Container implements IScene {
 
   public update(delay: number): void {
     this.player.rotation = this.playerRotation;
+
+    this.frames++;
 
     if (
       (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) &&
@@ -228,6 +236,10 @@ export class GameScene extends Container implements IScene {
       });
     });
 
+    this.enemyBullets.forEach((bullet) => bullet.update(delay));
+
+    if (this.frames === 1000) this.frames = 0;
+
     this.enemies.children.forEach((enemy: DisplayObject) => {
       enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
 
@@ -256,6 +268,37 @@ export class GameScene extends Container implements IScene {
       }
     });
 
+    if (this.frames % 100 === 0 && this.enemyCount > 0) {
+      const shooter: EnemyShip = this.enemies.children[
+        Math.floor(Math.random() * this.enemies.children.length)
+      ] as EnemyShip;
+
+      const x: number = Math.floor(shooter.x) + 160;
+      const y: number = Math.floor(this.enemies.position.y);
+      const speed = this.vaweCount + 2;
+      const bullet: EnemyBullet = new EnemyBullet({ x, y, speed });
+
+      this.enemyBullets.push(bullet);
+      this.addChild(bullet);
+      // TODO: normalize bullet speed. it's too fast on higher waves
+
+      // console.log(this.enemyBullets.length);
+    }
+
+    this.enemyBullets.forEach((bullet) => {
+      if (bullet.getBounds().intersects(this.player.getBounds())) {
+        this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
+        this.removeChild(bullet);
+        this.playerLives--;
+        // TODO: add effects
+      }
+
+      if (bullet.position.y > Manager.height) {
+        this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
+        this.removeChild(bullet);
+      }
+    });
+
     if (this.enemyCount === 0) {
       this.removeChild(this.enemies);
       this.enemies = new Grid();
@@ -265,7 +308,6 @@ export class GameScene extends Container implements IScene {
       this.enemyCount = this.enemies.enemies.length;
       this.explosionOffset = 0;
       this.vaweCount++;
-      console.log(this.vaweCount);
 
       // TODO: add sfx maybe?
       // check if need more reset
