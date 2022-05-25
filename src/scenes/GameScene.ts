@@ -7,7 +7,7 @@ import {
 } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { Bullet } from "../elements/Bullet";
-import { EnemyShip } from "../elements/EnemyShip";
+// import { EnemyShip } from "../elements/EnemyShip";
 import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
 import { WinScene } from "./WinScene";
@@ -15,6 +15,7 @@ import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
 import { writeHighScore } from "../helpers/helpers";
+import { Grid } from "../elements/Grid";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -23,16 +24,20 @@ export class GameScene extends Container implements IScene {
   private background: Sprite = Sprite.from("bg.png");
   private player: Sprite = new PlayerShip();
   private bullets: Container = new Container();
-  private enemies: Container = new Container();
+  private enemies: Grid;
+  private startPos: {
+    x: number;
+    y: number;
+  };
   private livesLabel: Label = new Label("Lives: 3", {
     fontFamily: "Arial",
-    fontSize: 24,
+    fontSize: 20,
     fill: 0xffffff,
     align: "center",
   });
   private scoreLabel: Label = new Label("Score: 0", {
     fontFamily: "Arial",
-    fontSize: 24,
+    fontSize: 20,
     fill: 0xffffff,
     align: "center",
   });
@@ -43,9 +48,9 @@ export class GameScene extends Container implements IScene {
   private playerRotation = 0;
   private playerSpeed: number = 4;
   private bulletSpeed: number = 15;
-  private enemyCount: number = 10;
+  private enemyCount: number;
   private playerLives: number = 3;
-  private enemiesLeft: number = 10;
+  // private enemiesLeft: number = 10;
   private score: number = 0;
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
@@ -62,13 +67,13 @@ export class GameScene extends Container implements IScene {
 
     this.addEventListeners();
 
-    [...Array(this.enemyCount)].forEach((_, index) => {
-      const enemy: EnemyShip = new EnemyShip();
-      enemy.position.x = index * 65 + 30;
-      enemy.position.y = 40;
-      enemy.scale.set(0.8);
-      this.enemies.addChild(enemy);
-    });
+    this.enemies = new Grid();
+    this.startPos = {
+      x: this.screenWidth / 2 - this.enemies.width / 2,
+      y: 40,
+    };
+    this.enemies.x = this.startPos.x;
+    this.enemyCount = this.enemies.enemies.length;
 
     this.player.anchor.set(0.5);
     this.player.x = Manager.width / 2;
@@ -207,11 +212,14 @@ export class GameScene extends Container implements IScene {
 
       this.enemies.children.forEach((enemy: DisplayObject) => {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
-          this.enemyExplosion(enemy.position.x, enemy.position.y);
+          this.enemyExplosion(
+            enemy.position.x + this.startPos.x,
+            enemy.position.y
+          );
           this.effectPlay(this.explosionAudio, 0.01);
           this.enemies.removeChild(enemy);
           this.bullets.removeChild(bullet);
-          this.enemiesLeft--;
+          this.enemyCount--;
           this.score += 10;
         }
       });
@@ -223,16 +231,19 @@ export class GameScene extends Container implements IScene {
       if (enemy.position.y > Manager.height + 20) enemy.position.y = -30;
 
       if (enemy.getBounds().intersects(this.player.getBounds())) {
-        this.enemyExplosion(enemy.position.x, enemy.position.y);
+        this.enemyExplosion(
+          enemy.position.x + this.startPos.x,
+          enemy.position.y
+        );
         this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);
         this.playerLives--;
-        this.enemiesLeft--;
+        this.enemyCount--;
         this.score += 10;
       }
     });
 
-    if (this.enemiesLeft === 0) {
+    if (this.enemyCount === 0) {
       this.laserAudio.pause();
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
