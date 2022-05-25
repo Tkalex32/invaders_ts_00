@@ -29,6 +29,7 @@ export class GameScene extends Container implements IScene {
     x: number;
     y: number;
   };
+  private explosionOffset: number = 0;
   private livesLabel: Label = new Label("Lives: 3", {
     fontFamily: "Arial",
     fontSize: 20,
@@ -50,7 +51,7 @@ export class GameScene extends Container implements IScene {
   private bulletSpeed: number = 15;
   private enemyCount: number;
   private playerLives: number = 3;
-  // private enemiesLeft: number = 10;
+  private enemySpeed: number = 1;
   private score: number = 0;
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
@@ -69,10 +70,11 @@ export class GameScene extends Container implements IScene {
 
     this.enemies = new Grid();
     this.startPos = {
-      x: this.screenWidth / 2 - this.enemies.width / 2,
+      x: this.screenWidth / 2 - this.enemies.width / 2 + 30,
       y: 40,
     };
     this.enemies.x = this.startPos.x;
+    this.enemies.y = this.startPos.y;
     this.enemyCount = this.enemies.enemies.length;
 
     this.player.anchor.set(0.5);
@@ -214,7 +216,7 @@ export class GameScene extends Container implements IScene {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
           this.enemyExplosion(
             enemy.position.x + this.startPos.x,
-            enemy.position.y
+            enemy.position.y + this.startPos.y + this.explosionOffset
           );
           this.effectPlay(this.explosionAudio, 0.01);
           this.enemies.removeChild(enemy);
@@ -225,15 +227,25 @@ export class GameScene extends Container implements IScene {
       });
     });
 
-    this.enemies.children.forEach((enemy: DisplayObject) => {
-      enemy.position.y += Math.floor(Math.random() + 1) * delay;
+    this.enemies.children.forEach((enemy: DisplayObject, idx: number) => {
+      enemy.position.x = enemy.position.x += this.enemySpeed * delay;
 
-      if (enemy.position.y > Manager.height + 20) enemy.position.y = -30;
+      if (enemy.position.x + 140 > Manager.width) {
+        this.enemySpeed = this.enemySpeed * -1;
+        this.enemies.position.y += 30;
+        this.explosionOffset += 30;
+      }
+
+      if (idx === 0 && enemy.position.x < -80) {
+        this.enemySpeed = this.enemySpeed * -1;
+        this.enemies.position.y += 30;
+        this.explosionOffset += 30;
+      }
 
       if (enemy.getBounds().intersects(this.player.getBounds())) {
         this.enemyExplosion(
           enemy.position.x + this.startPos.x,
-          enemy.position.y
+          enemy.position.y + this.startPos.y + this.explosionOffset
         );
         this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);

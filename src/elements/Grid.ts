@@ -35,15 +35,15 @@ export class Grid extends Container {
     for (let x: number = 0; x < columns; x++) {
       for (let y: number = 0; y < rows; y++) {
         const enemy: EnemyShip = new EnemyShip({
-          x: x * 50,
-          y: y * 50,
+          x: x * 60,
+          y: y * 60,
         });
         enemy.scale.set(0.8);
         this.enemies.push(enemy);
       }
     }
     this.addChild(...this.enemies);
-    console.log(this.enemies);
+    // console.log(this.enemies);
   }
 
   public update(_framesPassed: number): void {
