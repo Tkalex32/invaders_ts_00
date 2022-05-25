@@ -7,10 +7,9 @@ import {
 } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { Bullet } from "../elements/Bullet";
-// import { EnemyShip } from "../elements/EnemyShip";
 import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
-import { WinScene } from "./WinScene";
+// import { WinScene } from "./WinScene";
 import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
@@ -53,6 +52,7 @@ export class GameScene extends Container implements IScene {
   private playerLives: number = 3;
   private enemySpeed: number = 1;
   private score: number = 0;
+  private vaweCount: number;
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
@@ -71,11 +71,12 @@ export class GameScene extends Container implements IScene {
     this.enemies = new Grid();
     this.startPos = {
       x: this.screenWidth / 2 - this.enemies.width / 2 + 30,
-      y: 40,
+      y: 50,
     };
     this.enemies.x = this.startPos.x;
     this.enemies.y = this.startPos.y;
     this.enemyCount = this.enemies.enemies.length;
+    this.vaweCount = 0;
 
     this.player.anchor.set(0.5);
     this.player.x = Manager.width / 2;
@@ -227,16 +228,16 @@ export class GameScene extends Container implements IScene {
       });
     });
 
-    this.enemies.children.forEach((enemy: DisplayObject, idx: number) => {
-      enemy.position.x = enemy.position.x += this.enemySpeed * delay;
+    this.enemies.children.forEach((enemy: DisplayObject) => {
+      enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
 
-      if (enemy.position.x + 140 > Manager.width) {
+      if (enemy.position.x + 220 > Manager.width) {
         this.enemySpeed = this.enemySpeed * -1;
         this.enemies.position.y += 30;
         this.explosionOffset += 30;
       }
 
-      if (idx === 0 && enemy.position.x < -80) {
+      if (enemy.position.x <= -160) {
         this.enemySpeed = this.enemySpeed * -1;
         this.enemies.position.y += 30;
         this.explosionOffset += 30;
@@ -256,20 +257,18 @@ export class GameScene extends Container implements IScene {
     });
 
     if (this.enemyCount === 0) {
-      this.laserAudio.pause();
-      this.laserAudio.currentTime = 0;
-      this.explosionAudio.pause();
-      this.laserAudio.currentTime = 0;
-      writeHighScore(this.score);
-      this.removeChild(
-        this.player,
-        this.bullets,
-        this.enemies,
-        this.livesLabel,
-        this.scoreLabel
-      );
-      Manager.changeScene(new WinScene());
-      this.winAudio.play();
+      this.removeChild(this.enemies);
+      this.enemies = new Grid();
+      this.enemies.x = this.startPos.x;
+      this.enemies.y = this.startPos.y;
+      this.addChild(this.enemies);
+      this.enemyCount = this.enemies.enemies.length;
+      this.explosionOffset = 0;
+      this.vaweCount++;
+      console.log(this.vaweCount);
+
+      // TODO: add sfx maybe?
+      // check if need more reset
     }
 
     if (this.playerLives === 0) {
