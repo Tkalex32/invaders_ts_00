@@ -9,7 +9,7 @@ export class Asteroid extends Sprite {
   constructor() {
     super();
 
-    this.x = Math.floor(Math.random() * window.innerWidth);
+    this.x = Math.floor(Math.random() * (Manager.width - 45));
     this.y = -30;
     this.speed = Math.floor(Math.random() * 3) + 1;
     // this.direction = 1;

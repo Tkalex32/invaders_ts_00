@@ -246,6 +246,7 @@ export class GameScene extends Container implements IScene {
           this.effectPlay(this.explosionAudio, 0.005);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
+          this.bullets.removeChild(bullet);
           this.score += 5;
         }
       });
@@ -289,7 +290,7 @@ export class GameScene extends Container implements IScene {
         Math.floor(Math.random() * this.enemies.children.length)
       ] as EnemyShip;
 
-      const x: number = Math.floor(shooter.x) + 160;
+      const x: number = Math.floor(shooter.x) + 160 + shooter.width / 2;
       const y: number = Math.floor(this.enemies.position.y);
       const speed = this.vaweCount + 2;
       const bullet: EnemyBullet = new EnemyBullet({ x, y, speed });
@@ -307,6 +308,7 @@ export class GameScene extends Container implements IScene {
       asteroid.scale.set(0.75);
       this.asteroids.push(asteroid);
       this.addChild(asteroid);
+      // console.log(asteroid.x, asteroid.y, asteroid.width);
     }
 
     this.asteroids.forEach((asteroid) => {
