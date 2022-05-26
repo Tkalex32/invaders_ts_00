@@ -18,7 +18,7 @@ import { explosionFrames } from "../assets";
 export class WelcomeScreen extends Container implements IScene {
   private screenWidth: number;
   private screenHeight: number;
-  private background: Sprite = Sprite.from("bg.png");
+  private background: Sprite = Sprite.from("background.png");
   private startButton: Graphics = new Button();
   private startButtonText: ButtonText;
   private player: Sprite;

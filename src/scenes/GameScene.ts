@@ -17,12 +17,13 @@ import { writeHighScore } from "../helpers/helpers";
 import { Grid } from "../elements/Grid";
 import { EnemyBullet } from "../elements/EnemyBullet";
 import { EnemyShip } from "../elements/EnemyShip";
+import { Asteroid } from "../elements/Asteroid";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
   private pauseOverlay: PauseOverlay = new PauseOverlay();
   private pause: boolean = false;
-  private background: Sprite = Sprite.from("bg.png");
+  private background: Sprite = Sprite.from("background.png");
   private player: Sprite = new PlayerShip();
   private bullets: Container = new Container();
   private enemies: Grid;
@@ -57,10 +58,13 @@ export class GameScene extends Container implements IScene {
   private vaweCount: number;
   private frames: number;
   private enemyBullets: EnemyBullet[];
+  private asteroids: Asteroid[];
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
   private loseAudio: HTMLAudioElement = new Audio("lose.mp3");
+  private hitAudio: HTMLAudioElement = new Audio("hit.wav");
+  private enemyBulletAudio: HTMLAudioElement = new Audio("enemyBullet.wav");
 
   constructor() {
     super();
@@ -82,6 +86,7 @@ export class GameScene extends Container implements IScene {
     this.enemyCount = this.enemies.enemies.length;
     this.vaweCount = 0;
     this.enemyBullets = [];
+    this.asteroids = [];
     this.frames = 0;
 
     this.player.anchor.set(0.5);
@@ -204,7 +209,7 @@ export class GameScene extends Container implements IScene {
         bullet.position.y = this.player.position.y;
         bullet.scale.x = 0.25;
         bullet.scale.y = 0.25;
-        this.effectPlay(this.laserAudio, 0.05);
+        this.effectPlay(this.laserAudio, 0.02);
         this.bullets.addChild(bullet);
 
         if (bullet.position.x < 0) this.bullets.removeChild(bullet);
@@ -227,18 +232,29 @@ export class GameScene extends Container implements IScene {
             enemy.position.x + this.startPos.x,
             enemy.position.y + this.startPos.y + this.explosionOffset
           );
-          this.effectPlay(this.explosionAudio, 0.01);
+          this.effectPlay(this.explosionAudio, 0.005);
           this.enemies.removeChild(enemy);
           this.bullets.removeChild(bullet);
           this.enemyCount--;
           this.score += 10;
         }
       });
+
+      this.asteroids.forEach((asteroid: Asteroid) => {
+        if (asteroid.getBounds().intersects(bullet.getBounds())) {
+          this.enemyExplosion(asteroid.position.x, asteroid.position.y);
+          this.effectPlay(this.explosionAudio, 0.005);
+          this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+          this.removeChild(asteroid);
+          this.score += 5;
+        }
+      });
     });
 
     this.enemyBullets.forEach((bullet) => bullet.update(delay));
+    this.asteroids.forEach((asteroid) => asteroid.update(delay));
 
-    if (this.frames === 1000) this.frames = 0;
+    if (this.frames === 100000) this.frames = 0;
 
     this.enemies.children.forEach((enemy: DisplayObject) => {
       enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
@@ -260,7 +276,7 @@ export class GameScene extends Container implements IScene {
           enemy.position.x + this.startPos.x,
           enemy.position.y + this.startPos.y + this.explosionOffset
         );
-        this.effectPlay(this.explosionAudio, 0.01);
+        this.effectPlay(this.explosionAudio, 0.005);
         this.enemies.removeChild(enemy);
         this.playerLives--;
         this.enemyCount--;
@@ -280,15 +296,45 @@ export class GameScene extends Container implements IScene {
 
       this.enemyBullets.push(bullet);
       this.addChild(bullet);
+      this.effectPlay(this.enemyBulletAudio, 0.02);
       // TODO: normalize bullet speed. it's too fast on higher waves
 
       // console.log(this.enemyBullets.length);
     }
 
+    if (this.frames % 800 === 0 && this.enemyCount > 0) {
+      const asteroid = new Asteroid();
+      asteroid.scale.set(0.75);
+      this.asteroids.push(asteroid);
+      this.addChild(asteroid);
+    }
+
+    this.asteroids.forEach((asteroid) => {
+      if (asteroid.getBounds().intersects(this.player.getBounds())) {
+        this.enemyExplosion(asteroid.position.x, asteroid.position.y);
+        this.effectPlay(this.explosionAudio, 0.005);
+        this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+        this.removeChild(asteroid);
+        this.playerLives--;
+        this.score += 5;
+      }
+
+      if (
+        asteroid.position.x < -50 ||
+        asteroid.position.x > Manager.width ||
+        asteroid.position.y < -50 ||
+        asteroid.position.y > Manager.height
+      ) {
+        this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+        this.removeChild(asteroid);
+      }
+    });
+
     this.enemyBullets.forEach((bullet) => {
       if (bullet.getBounds().intersects(this.player.getBounds())) {
         this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
         this.removeChild(bullet);
+        this.effectPlay(this.hitAudio, 0.02);
         this.playerLives--;
         // TODO: add effects
       }
@@ -310,7 +356,7 @@ export class GameScene extends Container implements IScene {
       this.vaweCount++;
 
       // TODO: add sfx maybe?
-      // check if need more reset
+      // maybe need more reset? check if it's needed
     }
 
     if (this.playerLives === 0) {
