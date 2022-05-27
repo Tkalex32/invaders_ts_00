@@ -56,7 +56,9 @@ export class GameScene extends Container implements IScene {
   private playerLives: number = 3;
   private enemySpeed: number = 1;
   private score: number = 0;
-  private vaweCount: number;
+  private waveCount: number;
+  private enemyShipBulletSpeed: number;
+  private enemyShipBSNext: number;
   private frames: number;
   private enemyBullets: EnemyBullet[];
   private asteroids: Asteroid[];
@@ -86,7 +88,9 @@ export class GameScene extends Container implements IScene {
     this.enemies.x = this.startPos.x;
     this.enemies.y = this.startPos.y;
     this.enemyCount = this.enemies.enemies.length;
-    this.vaweCount = 0;
+    this.enemyShipBulletSpeed = 2;
+    this.enemyShipBSNext = 0;
+    this.waveCount = 1;
     this.enemyBullets = [];
     this.asteroids = [];
     this.particles = [];
@@ -248,7 +252,7 @@ export class GameScene extends Container implements IScene {
           createParticles(this.particles, asteroid, 0x444444, 0x000000);
 
           this.addChild(...this.particles);
-          this.effectPlay(this.explosionAudio, 0.005);
+          this.effectPlay(this.explosionAudio, 0.01);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
           this.bullets.removeChild(bullet);
@@ -289,13 +293,15 @@ export class GameScene extends Container implements IScene {
           enemy.position.x + this.startPos.x,
           enemy.position.y + this.startPos.y + this.explosionOffset
         );
-        this.effectPlay(this.explosionAudio, 0.005);
+        this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);
         this.playerLives--;
         this.enemyCount--;
         this.score += 10;
       }
     });
+
+    if (this.waveCount % 3 === 0) this.enemyShipBSNext = this.waveCount + 1;
 
     if (this.frames % 100 === 0 && this.enemyCount > 0) {
       const shooter: EnemyShip = this.enemies.children[
@@ -304,13 +310,16 @@ export class GameScene extends Container implements IScene {
 
       const x: number = Math.floor(shooter.x) + 160 + shooter.width / 2;
       const y: number = Math.floor(this.enemies.position.y);
-      const speed = this.vaweCount + 2;
-      const bullet: EnemyBullet = new EnemyBullet({ x, y, speed });
+      const speed: number = this.enemyShipBulletSpeed;
+      const bullet: EnemyBullet = new EnemyBullet({
+        x,
+        y,
+        speed,
+      });
 
       this.enemyBullets.push(bullet);
       this.addChild(bullet);
-      this.effectPlay(this.enemyBulletAudio, 0.02);
-      // TODO: normalize bullet speed. it's too fast on higher waves
+      this.effectPlay(this.enemyBulletAudio, 0.05);
     }
 
     if (this.frames % 800 === 0 && this.enemyCount > 0) {
@@ -324,7 +333,7 @@ export class GameScene extends Container implements IScene {
       if (asteroid.getBounds().intersects(this.player.getBounds())) {
         createParticles(this.particles, asteroid, 0x444444, 0x000000);
         this.addChild(...this.particles);
-        this.effectPlay(this.explosionAudio, 0.005);
+        this.effectPlay(this.explosionAudio, 0.01);
         this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
         this.removeChild(asteroid);
         this.playerLives--;
@@ -348,7 +357,7 @@ export class GameScene extends Container implements IScene {
         this.addChild(...this.particles);
         this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
         this.removeChild(bullet);
-        this.effectPlay(this.hitAudio, 0.02);
+        this.effectPlay(this.hitAudio, 0.05);
         this.playerLives--;
       }
 
@@ -359,6 +368,11 @@ export class GameScene extends Container implements IScene {
     });
 
     if (this.enemyCount === 0) {
+      this.enemyShipBulletSpeed =
+        this.waveCount === this.enemyShipBSNext && this.enemyShipBulletSpeed < 8
+          ? this.enemyShipBulletSpeed + 2
+          : this.enemyShipBulletSpeed;
+
       this.removeChild(this.enemies);
       this.enemies = new Grid();
       this.enemies.x = this.startPos.x;
@@ -366,10 +380,9 @@ export class GameScene extends Container implements IScene {
       this.addChild(this.enemies);
       this.enemyCount = this.enemies.enemies.length;
       this.explosionOffset = 0;
-      this.vaweCount++;
+      this.waveCount++;
 
-      // TODO: add sfx maybe?
-      // maybe need more reset? check if it's needed
+      // TODO: add more enemiy types
     }
 
     if (this.playerLives === 0) {
