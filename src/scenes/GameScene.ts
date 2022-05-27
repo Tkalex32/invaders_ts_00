@@ -18,6 +18,7 @@ import { Grid } from "../elements/Grid";
 import { EnemyBullet } from "../elements/EnemyBullet";
 import { EnemyShip } from "../elements/EnemyShip";
 import { Asteroid } from "../elements/Asteroid";
+import { Particle } from "../elements/Particle";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -59,6 +60,7 @@ export class GameScene extends Container implements IScene {
   private frames: number;
   private enemyBullets: EnemyBullet[];
   private asteroids: Asteroid[];
+  private particles: Particle[];
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
@@ -87,6 +89,7 @@ export class GameScene extends Container implements IScene {
     this.vaweCount = 0;
     this.enemyBullets = [];
     this.asteroids = [];
+    this.particles = [];
     this.frames = 0;
 
     this.player.anchor.set(0.5);
@@ -242,7 +245,20 @@ export class GameScene extends Container implements IScene {
 
       this.asteroids.forEach((asteroid: Asteroid) => {
         if (asteroid.getBounds().intersects(bullet.getBounds())) {
-          this.enemyExplosion(asteroid.position.x, asteroid.position.y);
+          for (let i: number = 0; i < 15; i++) {
+            this.particles.push(
+              new Particle(
+                asteroid.position.x + asteroid.width / 2,
+                asteroid.position.y + asteroid.height / 2,
+                (Math.random() - 0.5) * 2,
+                (Math.random() - 0.5) * 2,
+                Math.random() * 6 + 2,
+                0x444444,
+                0x000000
+              )
+            );
+          }
+          this.addChild(...this.particles);
           this.effectPlay(this.explosionAudio, 0.005);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
@@ -254,6 +270,13 @@ export class GameScene extends Container implements IScene {
 
     this.enemyBullets.forEach((bullet) => bullet.update(delay));
     this.asteroids.forEach((asteroid) => asteroid.update(delay));
+    this.particles.forEach((particle) => {
+      if (particle.alpha <= 0) {
+        this.particles.splice(this.particles.indexOf(particle), 1);
+        this.removeChild(particle);
+      }
+      particle.update(delay);
+    });
 
     if (this.frames === 100000) this.frames = 0;
 
