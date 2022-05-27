@@ -311,8 +311,6 @@ export class GameScene extends Container implements IScene {
       this.addChild(bullet);
       this.effectPlay(this.enemyBulletAudio, 0.02);
       // TODO: normalize bullet speed. it's too fast on higher waves
-
-      // console.log(this.enemyBullets.length);
     }
 
     if (this.frames % 800 === 0 && this.enemyCount > 0) {
@@ -320,7 +318,6 @@ export class GameScene extends Container implements IScene {
       asteroid.scale.set(0.75);
       this.asteroids.push(asteroid);
       this.addChild(asteroid);
-      // console.log(asteroid.x, asteroid.y, asteroid.width);
     }
 
     this.asteroids.forEach((asteroid) => {
@@ -347,11 +344,12 @@ export class GameScene extends Container implements IScene {
 
     this.enemyBullets.forEach((bullet) => {
       if (bullet.getBounds().intersects(this.player.getBounds())) {
+        createParticles(this.particles, bullet, 0xf85c5c, 0xffffff, true);
+        this.addChild(...this.particles);
         this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
         this.removeChild(bullet);
         this.effectPlay(this.hitAudio, 0.02);
         this.playerLives--;
-        // TODO: add effects
       }
 
       if (bullet.position.y > Manager.height) {
