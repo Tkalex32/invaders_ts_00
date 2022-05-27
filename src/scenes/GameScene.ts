@@ -336,7 +336,20 @@ export class GameScene extends Container implements IScene {
 
     this.asteroids.forEach((asteroid) => {
       if (asteroid.getBounds().intersects(this.player.getBounds())) {
-        this.enemyExplosion(asteroid.position.x, asteroid.position.y);
+        for (let i: number = 0; i < 15; i++) {
+          this.particles.push(
+            new Particle(
+              asteroid.position.x + asteroid.width / 2,
+              asteroid.position.y + asteroid.height / 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              Math.random() * 6 + 2,
+              0x444444,
+              0x000000
+            )
+          );
+        }
+        this.addChild(...this.particles);
         this.effectPlay(this.explosionAudio, 0.005);
         this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
         this.removeChild(asteroid);
