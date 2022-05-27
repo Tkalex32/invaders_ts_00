@@ -7,7 +7,7 @@ export class LoaderScene extends Container implements IScene {
   private screenWidth: number;
   private screenHeight: number;
   private loaderBarWidth: number;
-  private background: Sprite = Sprite.from("bg.png");
+  private background: Sprite = Sprite.from("background.png");
   private loaderBar: Container;
   private loaderBarBorder: Graphics;
   private loaderBarFill: Graphics;
