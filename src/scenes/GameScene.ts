@@ -249,7 +249,13 @@ export class GameScene extends Container implements IScene {
 
       this.asteroids.forEach((asteroid: Asteroid) => {
         if (asteroid.getBounds().intersects(bullet.getBounds())) {
-          createParticles(this.particles, asteroid, 0x444444, 0x000000);
+          const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
+            ? 0xffffff
+            : 0x000000;
+          const fillColor = asteroid.texture.textureCacheIds[0].includes("20")
+            ? 0x00a3d9
+            : 0x444444;
+          createParticles(this.particles, asteroid, fillColor, lineColor);
 
           this.addChild(...this.particles);
           this.effectPlay(this.explosionAudio, 0.01);
@@ -331,7 +337,13 @@ export class GameScene extends Container implements IScene {
 
     this.asteroids.forEach((asteroid) => {
       if (asteroid.getBounds().intersects(this.player.getBounds())) {
-        createParticles(this.particles, asteroid, 0x444444, 0x000000);
+        const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
+          ? 0xffffff
+          : 0x000000;
+        const fillColor = asteroid.texture.textureCacheIds[0].includes("20")
+          ? 0x00a3d9
+          : 0x444444;
+        createParticles(this.particles, asteroid, fillColor, lineColor);
         this.addChild(...this.particles);
         this.effectPlay(this.explosionAudio, 0.01);
         this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
