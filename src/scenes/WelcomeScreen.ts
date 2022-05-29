@@ -135,7 +135,7 @@ export class WelcomeScreen extends Container implements IScene {
     this.player.x = this.screenWidth / 2;
     this.player.y = this.screenHeight - 30;
 
-    this.enemy = new EnemyShip({ x: this.screenWidth / 2 + 20, y: 40 });
+    this.enemy = new EnemyShip(this.screenWidth / 2 + 20, 40, "enemy1");
 
     this.bullet = new Bullet();
     this.bullet.x = this.player.x;

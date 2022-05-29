@@ -1,10 +1,10 @@
 import { Sprite } from "pixi.js";
 
 export class EnemyShip extends Sprite {
-  constructor({ x, y }: { x: number; y: number }) {
+  constructor(x: number, y: number, shipType: string) {
     super();
 
-    this.texture = Sprite.from("enemy.png").texture;
+    this.texture = Sprite.from(shipType).texture;
     this.anchor.set(0.5);
     this.x = x;
     this.y = y;

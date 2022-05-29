@@ -14,7 +14,7 @@ import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
 import { createParticles, writeHighScore } from "../helpers/helpers";
-import { Grid } from "../elements/Grid";
+import { Grid } from "../helpers/Grid";
 import { EnemyBullet } from "../elements/EnemyBullet";
 import { EnemyShip } from "../elements/EnemyShip";
 import { Asteroid } from "../elements/Asteroid";
@@ -32,7 +32,6 @@ export class GameScene extends Container implements IScene {
     x: number;
     y: number;
   };
-  private explosionOffset: number = 0;
   private livesLabel: Label = new Label("Lives: 3", {
     fontFamily: "Arial",
     fontSize: 20,
@@ -68,7 +67,6 @@ export class GameScene extends Container implements IScene {
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
   private loseAudio: HTMLAudioElement = new Audio("lose.mp3");
   private hitAudio: HTMLAudioElement = new Audio("hit.wav");
-  private enemyBulletAudio: HTMLAudioElement = new Audio("enemyBullet.wav");
 
   constructor() {
     super();
@@ -80,17 +78,18 @@ export class GameScene extends Container implements IScene {
 
     this.addEventListeners();
 
-    this.enemies = new Grid();
+    this.waveCount = 1;
+    this.enemies = new Grid(this.waveCount);
+
     this.startPos = {
-      x: this.screenWidth / 2 - this.enemies.width / 2 + 30,
+      x: 0 + this.enemies.enemies[0].width / 2,
       y: 50,
     };
     this.enemies.x = this.startPos.x;
-    this.enemies.y = this.startPos.y;
+    this.enemies.y = this.enemies.height;
     this.enemyCount = this.enemies.enemies.length;
     this.enemyShipBulletSpeed = 2;
     this.enemyShipBSNext = 0;
-    this.waveCount = 1;
     this.enemyBullets = [];
     this.asteroids = [];
     this.particles = [];
@@ -225,7 +224,7 @@ export class GameScene extends Container implements IScene {
       }
     }
 
-    this.scoreLabel.text = `Score: ${this.score}`;
+    this.scoreLabel.text = `Score: ${this.waveCount}`;
     this.livesLabel.text = `Lives: ${this.playerLives}`;
 
     this.bullets.children.forEach((bullet: DisplayObject) => {
@@ -236,8 +235,8 @@ export class GameScene extends Container implements IScene {
       this.enemies.children.forEach((enemy: DisplayObject) => {
         if (enemy.getBounds().intersects(bullet.getBounds())) {
           this.enemyExplosion(
-            enemy.position.x + this.startPos.x,
-            enemy.position.y + this.startPos.y + this.explosionOffset
+            Math.floor(enemy.x) + 32,
+            Math.floor(this.enemies.position.y + enemy.y)
           );
           this.effectPlay(this.explosionAudio, 0.005);
           this.enemies.removeChild(enemy);
@@ -282,22 +281,20 @@ export class GameScene extends Container implements IScene {
     this.enemies.children.forEach((enemy: DisplayObject) => {
       enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
 
-      if (enemy.position.x + 220 > Manager.width) {
+      if (enemy.position.x + 64 >= Manager.width) {
         this.enemySpeed = this.enemySpeed * -1;
         this.enemies.position.y += 30;
-        this.explosionOffset += 30;
       }
 
-      if (enemy.position.x <= -160) {
+      if (enemy.position.x < 0) {
         this.enemySpeed = this.enemySpeed * -1;
         this.enemies.position.y += 30;
-        this.explosionOffset += 30;
       }
 
       if (enemy.getBounds().intersects(this.player.getBounds())) {
         this.enemyExplosion(
-          enemy.position.x + this.startPos.x,
-          enemy.position.y + this.startPos.y + this.explosionOffset
+          Math.floor(enemy.x) + 32,
+          Math.floor(this.enemies.position.y + enemy.y)
         );
         this.effectPlay(this.explosionAudio, 0.01);
         this.enemies.removeChild(enemy);
@@ -314,18 +311,23 @@ export class GameScene extends Container implements IScene {
         Math.floor(Math.random() * this.enemies.children.length)
       ] as EnemyShip;
 
-      const x: number = Math.floor(shooter.x) + 160 + shooter.width / 2;
-      const y: number = Math.floor(this.enemies.position.y);
+      const x: number = Math.floor(shooter.x + shooter.width / 2) - 6;
+      const y: number = Math.floor(this.enemies.position.y + shooter.y + 32);
       const speed: number = this.enemyShipBulletSpeed;
+      const type: string = shooter.texture.textureCacheIds[0];
       const bullet: EnemyBullet = new EnemyBullet({
         x,
         y,
         speed,
+        type,
       });
+      const enemyBulletAudio: HTMLAudioElement = new Audio(
+        `enemyBullet${type.slice(-1)}.wav`
+      );
 
       this.enemyBullets.push(bullet);
       this.addChild(bullet);
-      this.effectPlay(this.enemyBulletAudio, 0.05);
+      this.effectPlay(enemyBulletAudio, 0.05);
     }
 
     if (this.frames % 800 === 0 && this.enemyCount > 0) {
@@ -348,7 +350,7 @@ export class GameScene extends Container implements IScene {
         this.effectPlay(this.explosionAudio, 0.01);
         this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
         this.removeChild(asteroid);
-        this.playerLives--;
+        // this.playerLives--;
         this.score += 5;
       }
 
@@ -370,7 +372,7 @@ export class GameScene extends Container implements IScene {
         this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
         this.removeChild(bullet);
         this.effectPlay(this.hitAudio, 0.05);
-        this.playerLives--;
+        // this.playerLives--;
       }
 
       if (bullet.position.y > Manager.height) {
@@ -380,21 +382,23 @@ export class GameScene extends Container implements IScene {
     });
 
     if (this.enemyCount === 0) {
+      this.waveCount++;
       this.enemyShipBulletSpeed =
         this.waveCount === this.enemyShipBSNext && this.enemyShipBulletSpeed < 8
           ? this.enemyShipBulletSpeed + 2
           : this.enemyShipBulletSpeed;
 
       this.removeChild(this.enemies);
-      this.enemies = new Grid();
+      this.enemies = new Grid(this.waveCount);
+
+      this.startPos = {
+        x: 0 + this.enemies.enemies[0].width / 2,
+        y: 50,
+      };
       this.enemies.x = this.startPos.x;
-      this.enemies.y = this.startPos.y;
+      this.enemies.y = this.enemies.height;
       this.addChild(this.enemies);
       this.enemyCount = this.enemies.enemies.length;
-      this.explosionOffset = 0;
-      this.waveCount++;
-
-      // TODO: add more enemiy types
     }
 
     if (this.playerLives === 0) {

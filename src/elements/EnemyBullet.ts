@@ -1,26 +1,25 @@
-import { Graphics } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 
-export class EnemyBullet extends Graphics {
+export class EnemyBullet extends Sprite {
   speed: number;
   constructor({
     x,
     y,
     speed,
-    color = 0xffffff,
+    type,
   }: {
     x: number;
     y: number;
     speed: number;
-    color?: number;
+    type: string;
   }) {
     super();
 
     this.x = x;
     this.y = y;
     this.speed = speed;
-    this.beginFill(color);
-    this.drawRect(0, 0, 4, 10);
-    this.endFill();
+    const bulletType = type.slice(-1);
+    this.texture = Texture.from(`ebullet${bulletType}`);
   }
 
   update(_framesPassed: number): void {
