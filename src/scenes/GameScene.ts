@@ -311,22 +311,45 @@ export class GameScene extends Container implements IScene {
         Math.floor(Math.random() * this.enemies.children.length)
       ] as EnemyShip;
 
-      const x: number = Math.floor(shooter.x + shooter.width / 2) - 6;
+      let x: number = Math.floor(shooter.x + shooter.width / 2) - 6;
       const y: number = Math.floor(this.enemies.position.y + shooter.y + 32);
       const speed: number = this.enemyShipBulletSpeed;
       const type: string = shooter.texture.textureCacheIds[0];
-      const bullet: EnemyBullet = new EnemyBullet({
-        x,
-        y,
-        speed,
-        type,
-      });
+      let dx: number = 0;
+      let dy: number = 600 - y;
+      let angle: number = Math.atan2(dy, dx);
+      let bullet: EnemyBullet;
+
+      if (type.slice(-1) === "3") {
+        dx = this.player.position.x - x;
+        dy = this.player.position.y - y;
+        angle = Math.atan2(dy, dx);
+      }
+
+      if (type.slice(-1) === "2") {
+        Array(2)
+          .fill(0)
+          .forEach((_, i) => {
+            x = x - 24 + i * 64;
+            bullet = new EnemyBullet({ x, y, speed, type, angle });
+            this.enemyBullets.push(bullet);
+            this.addChild(bullet);
+          });
+      } else {
+        bullet = new EnemyBullet({
+          x,
+          y,
+          speed,
+          type,
+          angle,
+        });
+        this.enemyBullets.push(bullet);
+        this.addChild(bullet);
+      }
       const enemyBulletAudio: HTMLAudioElement = new Audio(
         `enemyBullet${type.slice(-1)}.wav`
       );
 
-      this.enemyBullets.push(bullet);
-      this.addChild(bullet);
       this.effectPlay(enemyBulletAudio, 0.05);
     }
 
@@ -350,7 +373,7 @@ export class GameScene extends Container implements IScene {
         this.effectPlay(this.explosionAudio, 0.01);
         this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
         this.removeChild(asteroid);
-        // this.playerLives--;
+        this.playerLives--;
         this.score += 5;
       }
 
@@ -372,7 +395,7 @@ export class GameScene extends Container implements IScene {
         this.enemyBullets.splice(this.enemyBullets.indexOf(bullet), 1);
         this.removeChild(bullet);
         this.effectPlay(this.hitAudio, 0.05);
-        // this.playerLives--;
+        this.playerLives--;
       }
 
       if (bullet.position.y > Manager.height) {

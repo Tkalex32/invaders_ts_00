@@ -7,11 +7,13 @@ export class EnemyBullet extends Sprite {
     y,
     speed,
     type,
+    angle,
   }: {
     x: number;
     y: number;
     speed: number;
     type: string;
+    angle: number;
   }) {
     super();
 
@@ -20,9 +22,11 @@ export class EnemyBullet extends Sprite {
     this.speed = speed;
     const bulletType = type.slice(-1);
     this.texture = Texture.from(`ebullet${bulletType}`);
+    this.angle = angle;
   }
 
   update(_framesPassed: number): void {
-    this.y += this.speed;
+    this.x += 2 * Math.cos(this.angle);
+    this.y += 2 * Math.sin(this.angle);
   }
 }
