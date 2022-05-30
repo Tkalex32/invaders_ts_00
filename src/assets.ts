@@ -4,6 +4,7 @@ export const assets = [
   { name: "enemy1", url: "./enemy1.png" },
   { name: "enemy2", url: "./enemy2.png" },
   { name: "enemy3", url: "./enemy3.png" },
+  { name: "boss", url: "./boss.png" },
   { name: "ebullet1", url: "./ebullet1.png" },
   { name: "ebullet2", url: "./ebullet2.png" },
   { name: "ebullet3", url: "./ebullet3.png" },

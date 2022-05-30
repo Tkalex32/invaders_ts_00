@@ -1,5 +1,6 @@
 import { Application } from "@pixi/app";
 import { DisplayObject } from "@pixi/display";
+import { Timer } from "eventemitter3-timer";
 
 export class Manager {
   private constructor() {}
@@ -46,7 +47,10 @@ export class Manager {
       width: width,
       height: height,
     });
-
+    Manager.app.ticker.add(
+      () => Timer.timerManager.update(Manager.app.ticker.elapsedMS),
+      this
+    );
     Manager.app.ticker.add(Manager.update);
   };
 
@@ -98,4 +102,14 @@ export interface IScene extends DisplayObject {
 export interface IStorage {
   highScore: number;
   muteSFX: boolean;
+}
+
+export interface IParticle {
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  width: number;
+  height: number;
 }
