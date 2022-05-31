@@ -2,6 +2,7 @@ import {
   AnimatedSprite,
   Container,
   DisplayObject,
+  Graphics,
   Sprite,
   Texture,
 } from "pixi.js";
@@ -51,6 +52,9 @@ export class GameScene extends Container implements IScene {
     fill: 0xffffff,
     align: "center",
   });
+  private bossHPBar: Container;
+  private bossHPBarBack: Graphics;
+  private bossHPBarFront: Graphics;
   private bossHP: number;
   private isMouseFlag: boolean = false;
   private lastBulletSpawnTime: number = 0;
@@ -92,6 +96,10 @@ export class GameScene extends Container implements IScene {
     this.loseAudio.volume = 0.1;
 
     this.addEventListeners();
+
+    this.bossHPBar = new Container();
+    this.bossHPBarBack = new Graphics();
+    this.bossHPBarFront = new Graphics();
 
     this.bossHP = 0;
     this.waveCount = 1;
@@ -542,6 +550,24 @@ export class GameScene extends Container implements IScene {
       this.addChild(asteroid);
     }
 
+    if (this.waveCount % 4 === 0 && this.enemyCount > 0) {
+      const segmentWidth = 100 / (this.waveCount * 2);
+
+      this.bossHPBarBack.beginFill(0x4287f5);
+      this.bossHPBarBack.lineStyle(2, 0x4287f5);
+      this.bossHPBarBack.drawRect(0, 0, 100, 8);
+      this.bossHPBarBack.endFill();
+      this.bossHPBarBack.position.set(this.width / 2 - 50, 200);
+      this.bossHPBarFront.beginFill(0xf51d45);
+      this.bossHPBarFront.drawRect(0, 0, 100, 8);
+      this.bossHPBarFront.endFill();
+      this.bossHPBarFront.width = this.bossHP * segmentWidth;
+      this.bossHPBarFront.position.set(this.width / 2 - 50, 200);
+
+      this.bossHPBar.addChild(this.bossHPBarBack, this.bossHPBarFront);
+      this.addChild(this.bossHPBar);
+    }
+
     this.asteroids.forEach((asteroid) => {
       if (asteroid.getBounds().intersects(this.player.getBounds())) {
         const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
@@ -600,7 +626,7 @@ export class GameScene extends Container implements IScene {
           ? this.enemyShipBulletSpeed + 2
           : this.enemyShipBulletSpeed;
 
-      this.removeChild(this.enemies);
+      this.removeChild(this.enemies, this.bossHPBar);
       this.enemies = new Grid(this.waveCount);
 
       this.startPos = {
