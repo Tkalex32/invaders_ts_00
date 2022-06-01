@@ -1,17 +1,6 @@
 import { Graphics, Sprite } from "pixi.js";
 import { Particle } from "../elements/Particle";
-import { IParticle, IStorage, Manager } from "../Manager";
-
-export const writeHighScore = (score: number): void => {
-  const data: IStorage = Manager.localStorageData;
-
-  if (score > data.highScore) {
-    data.highScore = score;
-    Manager.setLocalStorageData(data);
-  } else {
-    Manager.setLocalStorageData(data);
-  }
-};
+import { IParticle } from "../Manager";
 
 export const createParticles = (
   particles: Particle[],

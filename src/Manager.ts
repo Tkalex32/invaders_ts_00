@@ -7,6 +7,7 @@ export class Manager {
 
   private static app: Application;
   private static currentScene: IScene;
+  private static loaded: boolean;
 
   private static _width: number;
   private static _height: number;
@@ -28,6 +29,10 @@ export class Manager {
     return Manager._localStorageData;
   }
 
+  public static set localStorageData(data: IStorage) {
+    Manager._localStorageData = data;
+  }
+
   public static get version(): string {
     return Manager._version;
   }
@@ -43,6 +48,7 @@ export class Manager {
       highScore: 0,
       muteSFX: false,
     };
+    Manager.loaded = false;
 
     Manager.app = new Application({
       view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
@@ -74,7 +80,7 @@ export class Manager {
       Manager.currentScene.update(framesPassed);
     }
 
-    Manager.getLocalStorageData();
+    if (!this.loaded) this.getLocalStorageData();
   };
 
   public static pause = (): void => {
@@ -87,17 +93,32 @@ export class Manager {
 
   public static getLocalStorageData = (): void => {
     if (localStorage.getItem("invaders")) {
-      this._localStorageData = JSON.parse(
-        localStorage.getItem("invaders") as string
-      );
+      const data = JSON.parse(localStorage.getItem("invaders") as string);
+      this.setLocalStorageData(data);
+      this.loaded = true;
+      console.log("Loaded local storage data");
     } else {
-      Manager.setLocalStorageData(this._localStorageData);
-      console.log(this._localStorageData);
+      this.localStorageData = {
+        highScore: 0,
+        muteSFX: false,
+      };
+      this.loaded = true;
+      console.log("Created local storage data");
     }
   };
 
-  public static setLocalStorageData = (value: IStorage): void =>
-    localStorage.setItem("invaders", JSON.stringify(value));
+  public static setLocalStorageData = (value: IStorage): void => {
+    Manager.localStorageData = value;
+    console.log("set", value);
+  };
+
+  public static writeLocalStorageData = (value: number): void => {
+    let { highScore, muteSFX } = this.localStorageData;
+    highScore = highScore > value ? highScore : value;
+    localStorage.setItem("invaders", JSON.stringify({ highScore, muteSFX }));
+    this.setLocalStorageData({ highScore, muteSFX });
+    console.log("write", highScore, muteSFX);
+  };
 }
 
 export interface IScene extends DisplayObject {

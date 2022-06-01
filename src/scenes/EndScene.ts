@@ -1,5 +1,4 @@
 import { Container, Sprite, Text } from "pixi.js";
-import { writeHighScore } from "../helpers/helpers";
 import { IScene, IStorage, Manager } from "../Manager";
 import { MainScene } from "./MainScene";
 
@@ -32,8 +31,9 @@ export class EndScene extends Container implements IScene {
   constructor(score: number) {
     super();
 
+    this.score = score;
     this.getHighScore();
-    writeHighScore(this.score);
+    Manager.writeLocalStorageData(this.score);
 
     this.screenWidth = Manager.width;
     this.screenHeight = Manager.height;
@@ -82,7 +82,6 @@ export class EndScene extends Container implements IScene {
     this.scoreLabel.x = 347;
     this.scoreLabel.y = 134;
 
-    this.score = score;
     this.scoreText = new Text(`${this.score}`, {
       fontFamily: "digital",
       fontSize: 50,
