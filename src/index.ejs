@@ -12,6 +12,10 @@
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,200;0,300;0,400;0,600;0,800;1,200;1,300;1,400;1,600&family=Press+Start+2P&display=swap");
+      @font-face {
+        font-family: "digital";
+        src: url("./digitalt.ttf");
+      }
 
       * {
         margin: 0;
@@ -61,6 +65,16 @@
         font-family: Consolas, "Lucida Console", Monaco, "Courier New",
           monospace;
       }
+      .a {
+        font-family: "digital";
+        font-size: 0px;
+        visibility: hidden;
+      }
+      .b {
+        font-family: "Press Start 2P";
+        font-size: 0px;
+        visibility: hidden;
+      }
     </style>
   </head>
 
@@ -69,24 +83,9 @@
       >Please enable JavaScript in your web browser to view this page.</noscript
     >
     <div id="pixi-content">
-      <!-- <h3>What a game!</h3> -->
       <canvas id="pixi-canvas"></canvas>
-      <!-- <div class="info">
-        <p>
-          Pilot your ship with the <span class="key">↑</span>,
-          <span class="key">↓</span>, <span class="key">←</span>,<span
-            class="key"
-            >→</span
-          >
-          or <span class="key">W</span>, <span class="key">A</span>,
-          <span class="key">S</span>, <span class="key">D</span> keys.
-        </p>
-        <p>
-          Shoot with <span class="key">space</span> or
-          <span class="key">Mouse Left</span>
-        </p>
-        <p>You have 3 lives.</p>
-      </div> -->
+      <div class="a">a</div>
+      <div class="b">b</div>
     </div>
   </body>
 </html>

@@ -10,17 +10,16 @@ import { IScene, Manager } from "../Manager";
 import { Bullet } from "../elements/Bullet";
 import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
-// import { WinScene } from "./WinScene";
-import { LoseScene } from "./LoseScene";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
-import { createParticles, writeHighScore } from "../helpers/helpers";
+import { createParticles } from "../helpers/helpers";
 import { Grid } from "../helpers/Grid";
 import { EnemyBullet } from "../elements/EnemyBullet";
 import { EnemyShip } from "../elements/EnemyShip";
 import { Asteroid } from "../elements/Asteroid";
 import { Particle } from "../elements/Particle";
 import { Timer } from "eventemitter3-timer";
+import { EndScene } from "./EndScene";
 
 export class GameScene extends Container implements IScene {
   private screenWidth: number;
@@ -552,6 +551,8 @@ export class GameScene extends Container implements IScene {
 
     if (this.waveCount % 4 === 0 && this.enemyCount > 0) {
       const segmentWidth = 100 / (this.waveCount * 2);
+      this.removeChild(this.bossHPBar);
+      this.bossHPBar = new Container();
 
       this.bossHPBarBack.beginFill(0x4287f5);
       this.bossHPBarBack.lineStyle(2, 0x4287f5);
@@ -648,7 +649,6 @@ export class GameScene extends Container implements IScene {
       this.laserAudio.currentTime = 0;
       this.explosionAudio.pause();
       this.laserAudio.currentTime = 0;
-      writeHighScore(this.score);
       this.removeChild(
         this.player,
         this.bullets,
@@ -656,7 +656,7 @@ export class GameScene extends Container implements IScene {
         this.livesLabel,
         this.scoreLabel
       );
-      Manager.changeScene(new LoseScene());
+      Manager.changeScene(new EndScene(this.score));
       this.loseAudio.play();
     }
   }

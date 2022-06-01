@@ -11,6 +11,7 @@ export class Manager {
   private static _width: number;
   private static _height: number;
   private static _localStorageData: IStorage;
+  private static _version: string = "0.0.7 alpha";
 
   public static get width(): number {
     return Manager._width;
@@ -25,6 +26,10 @@ export class Manager {
 
   public static get localStorageData(): IStorage {
     return Manager._localStorageData;
+  }
+
+  public static get version(): string {
+    return Manager._version;
   }
 
   public static initialize = (
