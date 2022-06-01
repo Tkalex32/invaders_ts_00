@@ -77,8 +77,7 @@ export class LoaderScene extends Container implements IScene {
       this.logo,
       this.ptwLogo,
       this.loaderBar,
-      this.loaderText,
-      this.versionText
+      this.loaderText
     );
     this.addChild(this.container);
 
