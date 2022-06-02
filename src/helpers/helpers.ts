@@ -8,7 +8,7 @@ export const createParticles = (
   color: number,
   lineColor: number,
   small?: boolean
-) => {
+): void => {
   small = small || false;
 
   for (let i: number = 0; small ? i < 5 : i < 15; i++) {

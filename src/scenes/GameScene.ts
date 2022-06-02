@@ -143,6 +143,7 @@ export class GameScene extends Container implements IScene {
     audio.pause();
     audio.currentTime = 0;
     audio.volume = volume;
+    audio.muted = Manager.localStorageData.muteSFX;
     audio.play();
   };
 
@@ -156,13 +157,13 @@ export class GameScene extends Container implements IScene {
     window.removeEventListener("keyup", this.onKeyUp.bind(this));
   };
 
-  private onKeyDown(e: KeyboardEvent): void {
+  private onKeyDown = (e: KeyboardEvent): void => {
     this.keysMaps[e.code] = true;
-  }
+  };
 
-  private onKeyUp(e: KeyboardEvent): void {
+  private onKeyUp = (e: KeyboardEvent): void => {
     this.keysMaps[e.code] = false;
-  }
+  };
 
   explosionFrames: Array<String> = explosionFrames;
 
@@ -461,7 +462,6 @@ export class GameScene extends Container implements IScene {
     }
 
     const shoot1 = (): void => {
-      // TODO: fix this, 2 bullets same position. timer problrm maybe?
       const shooter: EnemyShip = this.enemies.children[0] as EnemyShip;
 
       let x: number = Math.floor(shooter.x + shooter.width / 2) - 6;

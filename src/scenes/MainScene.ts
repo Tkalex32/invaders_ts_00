@@ -12,16 +12,18 @@ export class MainScene extends Container implements IScene {
   private playButton: Sprite = Sprite.from("play");
   private highScore: number = 0;
   private highScoreText: Text;
-  private sfxButton: Sprite;
+  private sfxOnButton: Sprite = Sprite.from("sfxOn");
+  private sfxOffButton: Sprite = Sprite.from("sfxOff");
+  private sfxStatus: boolean;
   private versionText: Text;
   private version: string;
 
-  private getHighScore(): void {
+  private getHighScore = (): void => {
     const localData: IStorage = Manager.localStorageData;
     if (localData.highScore) {
       this.highScore = localData.highScore;
     }
-  }
+  };
 
   constructor() {
     super();
@@ -65,14 +67,28 @@ export class MainScene extends Container implements IScene {
     this.playButton.anchor.set(0.5);
     this.playButton.interactive = true;
     this.playButton.buttonMode = true;
-    this.playButton.on("click", this.startOnClick, this);
+    this.playButton.on("click", this.startGame, this);
 
-    this.sfxButton = Sprite.from("sfxOn");
-    this.sfxButton.x = 20;
-    this.sfxButton.y = 20;
-    this.sfxButton.scale.set(0.5);
-    this.sfxButton.interactive = true;
-    this.sfxButton.buttonMode = true;
+    this.sfxStatus = Manager.localStorageData.muteSFX;
+    this.sfxOnButton.x = 20;
+    this.sfxOnButton.y = 20;
+    this.sfxOnButton.scale.set(0.5);
+    this.sfxOnButton.interactive = true;
+    this.sfxOnButton.buttonMode = true;
+    this.sfxOnButton.on("click", this.changeSfxStatus, this);
+    this.sfxOffButton.x = 20;
+    this.sfxOffButton.y = 20;
+    this.sfxOffButton.scale.set(0.5);
+    this.sfxOffButton.interactive = true;
+    this.sfxOffButton.buttonMode = true;
+    this.sfxOffButton.on("click", this.changeSfxStatus, this);
+    if (this.sfxStatus) {
+      this.sfxOnButton.visible = false;
+      this.sfxOffButton.visible = true;
+    } else {
+      this.sfxOnButton.visible = true;
+      this.sfxOffButton.visible = false;
+    }
 
     this.versionText = new Text(`${this.version}`, {
       fontFamily: "digital",
@@ -90,17 +106,30 @@ export class MainScene extends Container implements IScene {
       this.welcomeBox,
       this.highScoreText,
       this.playButton,
-      this.sfxButton,
+      this.sfxOnButton,
+      this.sfxOffButton,
       this.versionText
     );
     this.addChild(this.container);
   }
 
-  private startOnClick(): void {
+  private startGame = (): void => {
     Manager.changeScene(new GameScene());
-  }
+  };
 
-  public update(_framesPassed: number): void {
+  private changeSfxStatus = (): void => {
+    this.sfxStatus = !this.sfxStatus;
+    Manager.saveMutedToLocalStorage();
+    if (this.sfxStatus) {
+      this.sfxOnButton.visible = false;
+      this.sfxOffButton.visible = true;
+    } else {
+      this.sfxOnButton.visible = true;
+      this.sfxOffButton.visible = false;
+    }
+  };
+
+  public update = (_framesPassed: number): void => {
     //
-  }
+  };
 }

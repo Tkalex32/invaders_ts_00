@@ -85,8 +85,8 @@ export class Grid extends Container {
     this.addChild(...this.enemies);
   }
 
-  public update(_framesPassed: number): void {
+  public update = (_framesPassed: number): void => {
     this.pos.x += this.speed.x;
     this.pos.y += this.speed.y;
-  }
+  };
 }

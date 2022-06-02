@@ -96,28 +96,31 @@ export class Manager {
       const data = JSON.parse(localStorage.getItem("invaders") as string);
       this.setLocalStorageData(data);
       this.loaded = true;
-      console.log("Loaded local storage data");
     } else {
       this.localStorageData = {
         highScore: 0,
         muteSFX: false,
       };
       this.loaded = true;
-      console.log("Created local storage data");
     }
   };
 
   public static setLocalStorageData = (value: IStorage): void => {
     Manager.localStorageData = value;
-    console.log("set", value);
   };
 
-  public static writeLocalStorageData = (value: number): void => {
+  public static saveScoreToLocalStorage = (value: number): void => {
     let { highScore, muteSFX } = this.localStorageData;
     highScore = highScore > value ? highScore : value;
     localStorage.setItem("invaders", JSON.stringify({ highScore, muteSFX }));
     this.setLocalStorageData({ highScore, muteSFX });
-    console.log("write", highScore, muteSFX);
+  };
+
+  public static saveMutedToLocalStorage = (): void => {
+    let { highScore, muteSFX } = this.localStorageData;
+    muteSFX = !muteSFX;
+    localStorage.setItem("invaders", JSON.stringify({ highScore, muteSFX }));
+    this.setLocalStorageData({ highScore, muteSFX });
   };
 }
 

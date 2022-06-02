@@ -89,16 +89,16 @@ export class LoaderScene extends Container implements IScene {
     Loader.shared.load();
   }
 
-  private downloadProgress(loader: Loader): void {
+  private downloadProgress = (loader: Loader): void => {
     const progressRatio = loader.progress / 100;
     this.loaderBarFill.scale.x = progressRatio;
-  }
+  };
 
-  private gameLoaded(): void {
+  private gameLoaded = (): void => {
     Manager.changeScene(new MainScene());
-  }
+  };
 
-  public update(_framesPassed: number): void {
+  public update = (_framesPassed: number): void => {
     //
-  }
+  };
 }

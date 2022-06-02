@@ -11,7 +11,9 @@ export class PauseOverlay extends Container {
   private resumeButton: Sprite = Sprite.from("resume");
   private menuButton: Sprite = Sprite.from("menu");
   private restartButton: Sprite = Sprite.from("restart");
-  private sfxButton: Sprite;
+  private sfxOnButton: Sprite = Sprite.from("sfxOn");
+  private sfxOffButton: Sprite = Sprite.from("sfxOff");
+  private sfxStatus: boolean;
   private infoBox: Sprite = Sprite.from("popup");
 
   constructor() {
@@ -47,12 +49,26 @@ export class PauseOverlay extends Container {
     this.title2.x = this.screenWidth / 2 - this.title2.width / 2;
     this.title2.y = 22;
 
-    this.sfxButton = Sprite.from("sfxOn");
-    this.sfxButton.x = 20;
-    this.sfxButton.y = 20;
-    this.sfxButton.scale.set(0.5);
-    this.sfxButton.interactive = true;
-    this.sfxButton.buttonMode = true;
+    this.sfxStatus = Manager.localStorageData.muteSFX;
+    this.sfxOnButton.x = 20;
+    this.sfxOnButton.y = 20;
+    this.sfxOnButton.scale.set(0.5);
+    this.sfxOnButton.interactive = true;
+    this.sfxOnButton.buttonMode = true;
+    this.sfxOnButton.on("click", this.changeSfxStatus, this);
+    this.sfxOffButton.x = 20;
+    this.sfxOffButton.y = 20;
+    this.sfxOffButton.scale.set(0.5);
+    this.sfxOffButton.interactive = true;
+    this.sfxOffButton.buttonMode = true;
+    this.sfxOffButton.on("click", this.changeSfxStatus, this);
+    if (this.sfxStatus) {
+      this.sfxOnButton.visible = false;
+      this.sfxOffButton.visible = true;
+    } else {
+      this.sfxOnButton.visible = true;
+      this.sfxOffButton.visible = false;
+    }
 
     this.resumeButton.x = this.infoBox.width / 2;
     this.resumeButton.y =
@@ -61,7 +77,7 @@ export class PauseOverlay extends Container {
     this.resumeButton.anchor.set(0.5);
     this.resumeButton.interactive = true;
     this.resumeButton.buttonMode = true;
-    this.resumeButton.on("click", this.startOnClick, this);
+    this.resumeButton.on("click", this.resumeGame, this);
 
     this.restartButton.x = this.infoBox.width / 2;
     this.restartButton.y =
@@ -76,7 +92,7 @@ export class PauseOverlay extends Container {
     this.menuButton.scale.set(0.5);
     this.menuButton.interactive = true;
     this.menuButton.buttonMode = true;
-    this.menuButton.on("click", this.startOnClick2, this);
+    this.menuButton.on("click", this.gotoMain, this);
 
     this.infoBox.addChild(
       this.resumeButton,
@@ -87,19 +103,32 @@ export class PauseOverlay extends Container {
       this.overlay,
       this.title,
       this.title2,
-      this.infoBox,
-      this.sfxButton
+      this.infoBox
+      /* this.sfxOnButton,
+      this.sfxOffButton */
     );
   }
 
-  private startOnClick(): void {
+  private resumeGame(): void {
     Manager.resume();
   }
 
-  private startOnClick2(): void {
+  private gotoMain(): void {
     Manager.resume();
     Manager.changeScene(new MainScene());
   }
+
+  private changeSfxStatus = (): void => {
+    this.sfxStatus = !this.sfxStatus;
+    Manager.saveMutedToLocalStorage();
+    if (this.sfxStatus) {
+      this.sfxOnButton.visible = false;
+      this.sfxOffButton.visible = true;
+    } else {
+      this.sfxOnButton.visible = true;
+      this.sfxOffButton.visible = false;
+    }
+  };
 
   public update(_framesPassed: number): void {
     // cuz

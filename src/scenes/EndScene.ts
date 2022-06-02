@@ -21,19 +21,19 @@ export class EndScene extends Container implements IScene {
   private score: number = 0;
   private menuButton: Sprite = Sprite.from("menu");
 
-  private getHighScore(): void {
+  private getHighScore = (): void => {
     const localData: IStorage = Manager.localStorageData;
     if (localData.highScore) {
       this.highScore = localData.highScore;
     }
-  }
+  };
 
   constructor(score: number) {
     super();
 
     this.score = score;
     this.getHighScore();
-    Manager.writeLocalStorageData(this.score);
+    Manager.saveScoreToLocalStorage(this.score);
 
     this.screenWidth = Manager.width;
     this.screenHeight = Manager.height;
@@ -167,11 +167,11 @@ export class EndScene extends Container implements IScene {
     this.addChild(this.container);
   }
 
-  private startOnClick(): void {
+  private startOnClick = (): void => {
     Manager.changeScene(new MainScene());
-  }
+  };
 
-  public update(_framesPassed: number): void {
+  public update = (_framesPassed: number): void => {
     //
-  }
+  };
 }
