@@ -657,7 +657,7 @@ export class GameScene extends Container implements IScene {
         this.scoreLabel
       );
       Manager.changeScene(new EndScene(this.score));
-      this.loseAudio.play();
+      this.effectPlay(this.loseAudio, 0.1);
     }
   }
 }

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "eventemitter3-timer": "^1.0.1",
+    "pixi-filters": "^4.1.6",
     "pixi.js": "^6.3.0"
   },
   "devDependencies": {

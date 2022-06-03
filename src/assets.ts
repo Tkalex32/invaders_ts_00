@@ -16,6 +16,7 @@ export const assets = [
   { name: "sfxOn", url: "./sfxOn.png" },
   { name: "sfxOff", url: "./sfxOff.png" },
   { name: "loading", url: "./loading.png" },
+  { name: "pauseHeader", url: "./pauseHeader.png" },
   { name: "welcomebox", url: "./welcomebox.png" },
   { name: "play", url: "./play.png" },
   { name: "menu", url: "./menu.png" },
