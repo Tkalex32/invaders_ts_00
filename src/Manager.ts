@@ -1,6 +1,6 @@
 import { Application } from "@pixi/app";
-import { DisplayObject } from "@pixi/display";
 import { Timer } from "eventemitter3-timer";
+import { IScene, IStorage } from "./types";
 
 export class Manager {
   private constructor() {}
@@ -122,23 +122,4 @@ export class Manager {
     localStorage.setItem("invaders", JSON.stringify({ highScore, muteSFX }));
     this.setLocalStorageData({ highScore, muteSFX });
   };
-}
-
-export interface IScene extends DisplayObject {
-  update(framesPassed: number): void;
-}
-
-export interface IStorage {
-  highScore: number;
-  muteSFX: boolean;
-}
-
-export interface IParticle {
-  position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  width: number;
-  height: number;
 }

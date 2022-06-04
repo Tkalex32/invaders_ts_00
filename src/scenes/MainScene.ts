@@ -1,5 +1,6 @@
 import { Container, Sprite, Text } from "pixi.js";
-import { IScene, IStorage, Manager } from "../Manager";
+import { Manager } from "../Manager";
+import { IScene, IStorage } from "../types";
 import { GameScene } from "./GameScene";
 
 export class MainScene extends Container implements IScene {

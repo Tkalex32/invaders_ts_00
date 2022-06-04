@@ -6,13 +6,12 @@ import {
   Sprite,
   Texture,
 } from "pixi.js";
-import { IScene, Manager } from "../Manager";
+import { Manager } from "../Manager";
 import { Bullet } from "../elements/Bullet";
 import { PlayerShip } from "../elements/PlayerShip";
 import { Label } from "../elements/hud/Label";
 import { explosionFrames } from "../assets";
 import { PauseOverlay } from "../elements/hud/PauseOverlay";
-import { createParticles } from "../helpers/helpers";
 import { Grid } from "../helpers/Grid";
 import { EnemyBullet } from "../elements/EnemyBullet";
 import { EnemyShip } from "../elements/EnemyShip";
@@ -20,9 +19,11 @@ import { Asteroid } from "../elements/Asteroid";
 import { Particle } from "../elements/Particle";
 import { Timer } from "eventemitter3-timer";
 import { EndScene } from "./EndScene";
+import { Drop } from "../elements/Drop";
+import { createParticles, itemDrop } from "../helpers/helpers";
+import { IScene, RandomDropItem } from "../types";
 
 export class GameScene extends Container implements IScene {
-  private screenWidth: number;
   private pauseOverlay: PauseOverlay = new PauseOverlay();
   private pause: boolean = false;
   private background: Sprite = Sprite.from("background.png");
@@ -34,27 +35,22 @@ export class GameScene extends Container implements IScene {
     y: number;
   };
   private livesLabel: Label = new Label("Lives: 3", {
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: 0xffffff,
+    fontFamily: "digital",
+    fontSize: 24,
+    fill: 0xffc926,
     align: "center",
   });
   private scoreLabel: Label = new Label("Score: 0", {
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: 0xffffff,
-    align: "center",
-  });
-  private bossShieldLabel: Label = new Label("HP: 0", {
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: 0xffffff,
+    fontFamily: "digital",
+    fontSize: 24,
+    fill: 0xffc926,
     align: "center",
   });
   private bossHPBar: Container;
   private bossHPBarBack: Graphics;
   private bossHPBarFront: Graphics;
   private bossHP: number;
+  private segmentWidth: number;
   private isMouseFlag: boolean = false;
   private lastBulletSpawnTime: number = 0;
   private spawnSpeed: number = 400;
@@ -73,6 +69,7 @@ export class GameScene extends Container implements IScene {
   private enemyBullets: EnemyBullet[];
   private asteroids: Asteroid[];
   private particles: Particle[];
+  private drops: Drop[];
   private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
   private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
   private winAudio: HTMLAudioElement = new Audio("win.mp3");
@@ -85,23 +82,38 @@ export class GameScene extends Container implements IScene {
   constructor() {
     super();
 
+    this.width = Manager.width;
+    this.height = Manager.height;
+
     this.timer1 = new Timer(1000);
     this.timer2 = new Timer(1000);
     this.timer3 = new Timer(1000);
 
-    this.screenWidth = Manager.width;
-    this.background.width = this.screenWidth;
+    this.background.width = Manager.width;
     this.winAudio.volume = 0.1;
     this.loseAudio.volume = 0.1;
 
     this.addEventListeners();
 
+    this.bossHP = 0;
+    this.waveCount = 1;
+    this.segmentWidth = 0;
     this.bossHPBar = new Container();
     this.bossHPBarBack = new Graphics();
     this.bossHPBarFront = new Graphics();
+    this.bossHPBarBack.beginFill(0x4287f5);
+    this.bossHPBarBack.lineStyle(2, 0x4287f5);
+    this.bossHPBarBack.drawRect(0, 0, 100, 8);
+    this.bossHPBarBack.endFill();
+    this.bossHPBarFront.beginFill(0xf51d45);
+    this.bossHPBarFront.drawRect(0, 0, 100, 8);
+    this.bossHPBarFront.endFill();
+    this.bossHPBar.position.set(Manager.width / 2 - 50, 200);
+    this.bossHPBar.addChild(this.bossHPBarBack, this.bossHPBarFront);
+    this.bossHPBar.visible = false;
 
-    this.bossHP = 0;
-    this.waveCount = 1;
+    this.pauseOverlay.zIndex = 100;
+
     this.enemies = new Grid(this.waveCount);
 
     this.startPos = {
@@ -116,18 +128,17 @@ export class GameScene extends Container implements IScene {
     this.enemyBullets = [];
     this.asteroids = [];
     this.particles = [];
+    this.drops = [];
     this.frames = 0;
 
     this.player.anchor.set(0.5);
     this.player.x = Manager.width / 2;
     this.player.y = Manager.height - 20;
 
-    this.livesLabel.x = Manager.width - 50;
-    this.livesLabel.y = 10;
-    this.livesLabel.anchor.set(0.5);
-    this.scoreLabel.x = 50;
-    this.scoreLabel.y = 10;
-    this.scoreLabel.anchor.set(0.5);
+    this.livesLabel.x = Manager.width - this.livesLabel.width - 5;
+    this.livesLabel.y = 0;
+    this.scoreLabel.x = 5;
+    this.scoreLabel.y = 0;
 
     this.addChild(
       this.background,
@@ -220,14 +231,15 @@ export class GameScene extends Container implements IScene {
       this.player.position.y += delay * this.playerSpeed;
 
     if (this.keysMaps["KeyP"]) {
-      Manager.pause();
       this.addChild(this.pauseOverlay);
+      Manager.pause();
+
       this.pause = true;
     }
 
     if (Manager.tickerState && this.pause) {
-      this.removeChild(this.pauseOverlay);
       this.pause = false;
+      this.removeChild(this.pauseOverlay);
     }
 
     if (this.isMouseFlag || this.keysMaps["Space"]) {
@@ -254,13 +266,15 @@ export class GameScene extends Container implements IScene {
     this.bullets.children.forEach((bullet: DisplayObject) => {
       bullet.position.y -= this.bulletSpeed * delay;
 
+      // remove bullet if it goes out of screen
       if (bullet.position.y < 0) this.bullets.removeChild(bullet);
 
       this.enemies.children.forEach((enemy: DisplayObject) => {
+        // enemy vs bullet collision
         if (enemy.getBounds().intersects(bullet.getBounds())) {
+          // boss level
           if (this.waveCount % 4 === 0) {
             this.bossHP--;
-            this.bossShieldLabel.text = `HP: ${this.bossHP}`;
 
             if (this.bossHP > 0) {
               createParticles(
@@ -283,14 +297,15 @@ export class GameScene extends Container implements IScene {
               this.bullets.removeChild(bullet);
             } else {
               this.enemyExplosion(enemy.position.x, enemy.position.y);
+              this.effectPlay(this.explosionAudio, 0.005);
+              this.scoreLabel.text = `Score: ${this.score}`;
               this.enemies.removeChild(enemy);
+              this.removeChild(bullet);
               this.enemyCount--;
               this.score += 100;
-              this.scoreLabel.text = `Score: ${this.score}`;
-              this.effectPlay(this.explosionAudio, 0.3);
-              this.removeChild(bullet, this.bossShieldLabel);
             }
           } else {
+            // normal level
             this.enemyExplosion(
               Math.floor(enemy.x) + 32,
               Math.floor(this.enemies.position.y + enemy.y)
@@ -314,8 +329,114 @@ export class GameScene extends Container implements IScene {
         }
       });
 
+      // asteroid vs bullet collision
       this.asteroids.forEach((asteroid: Asteroid) => {
         if (asteroid.getBounds().intersects(bullet.getBounds())) {
+          const lineColor: number =
+            asteroid.texture.textureCacheIds[0].includes("20")
+              ? 0xffffff
+              : 0x000000;
+          const fillColor: number =
+            asteroid.texture.textureCacheIds[0].includes("20")
+              ? 0x00a3d9
+              : 0x444444;
+          createParticles(this.particles, asteroid, fillColor, lineColor);
+
+          this.addChild(...this.particles);
+          this.effectPlay(this.explosionAudio, 0.005);
+          this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+          this.removeChild(asteroid);
+          this.bullets.removeChild(bullet);
+          this.score += 5;
+          const drop: RandomDropItem = itemDrop(
+            asteroid.texture.textureCacheIds[0]
+          );
+          if (drop !== "nothing") {
+            const dropItem = new Drop(
+              asteroid.x + asteroid.width / 2,
+              asteroid.y + asteroid.height / 2,
+              drop
+            );
+            // TODO add effect
+            console.log(drop, dropItem);
+
+            this.drops.push(dropItem);
+            this.addChild(dropItem);
+          }
+        }
+      });
+    });
+
+    this.drops.forEach((drop: Drop) => {
+      // drop vs player collision - pickup
+      if (drop.getBounds().intersects(this.player.getBounds())) {
+        this.drops.splice(this.drops.indexOf(drop), 1);
+        this.removeChild(drop);
+        // TODO add effect, add the powerup to the player
+        this.score += 25;
+      }
+    });
+
+    this.enemyBullets.forEach((enemyBullet: EnemyBullet) => {
+      enemyBullet.update(delay);
+
+      // bullet vs player collision
+      if (enemyBullet.getBounds().intersects(this.player.getBounds())) {
+        createParticles(this.particles, enemyBullet, 0xf85c5c, 0xffffff, true);
+        this.addChild(...this.particles);
+        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
+        this.removeChild(enemyBullet);
+        this.effectPlay(this.hitAudio, 0.05);
+        this.playerLives--;
+      }
+
+      // bullet out of bounds
+      if (enemyBullet.position.y > Manager.height) {
+        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
+        this.removeChild(enemyBullet);
+      }
+
+      // wave end
+      if (this.enemyCount === 0) {
+        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
+        this.removeChild(enemyBullet);
+
+        this.timer1.stop();
+        this.timer2.stop();
+        this.timer3.stop();
+        this.waveCount++;
+        this.enemyShipBulletSpeed =
+          this.waveCount === this.enemyShipBSNext &&
+          this.enemyShipBulletSpeed < 8
+            ? this.enemyShipBulletSpeed + 2
+            : this.enemyShipBulletSpeed;
+
+        this.removeChild(this.enemies, this.bossHPBar);
+        this.bossHPBar.visible = false;
+        this.enemies = new Grid(this.waveCount);
+
+        this.startPos = {
+          x: 0 + this.enemies.enemies[0].width / 2,
+          y: 50,
+        };
+        this.enemies.x = this.startPos.x;
+        this.enemies.y = this.enemies.height;
+        this.addChild(this.enemies);
+        this.enemyCount = this.enemies.enemies.length;
+
+        // set boss hp
+        if ((this.waveCount + 1) % 4 === 0) {
+          this.bossHP = (this.waveCount + 1) * 2;
+        }
+      }
+    });
+
+    this.asteroids.forEach((asteroid) => {
+      asteroid.update(delay);
+
+      // asteroid vs player collision
+      this.asteroids.forEach((asteroid) => {
+        if (asteroid.getBounds().intersects(this.player.getBounds())) {
           const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
             ? 0xffffff
             : 0x000000;
@@ -323,20 +444,30 @@ export class GameScene extends Container implements IScene {
             ? 0x00a3d9
             : 0x444444;
           createParticles(this.particles, asteroid, fillColor, lineColor);
-
           this.addChild(...this.particles);
-          this.effectPlay(this.explosionAudio, 0.01);
+          this.effectPlay(this.explosionAudio, 0.005);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
-          this.bullets.removeChild(bullet);
+          this.playerLives--;
           this.score += 5;
+          itemDrop(asteroid.texture.textureCacheIds[0]);
+        }
+
+        // asteroid out of bounds
+        if (
+          asteroid.position.x < -50 ||
+          asteroid.position.x > Manager.width ||
+          asteroid.position.y < -50 ||
+          asteroid.position.y > Manager.height
+        ) {
+          this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+          this.removeChild(asteroid);
         }
       });
     });
 
-    this.enemyBullets.forEach((bullet) => bullet.update(delay));
-    this.asteroids.forEach((asteroid) => asteroid.update(delay));
     this.particles.forEach((particle) => {
+      // remove particles
       if (particle.alpha <= 0) {
         this.particles.splice(this.particles.indexOf(particle), 1);
         this.removeChild(particle);
@@ -344,15 +475,23 @@ export class GameScene extends Container implements IScene {
       particle.update(delay);
     });
 
-    if (this.frames === 100000) this.frames = 0;
+    this.drops.forEach((drop) => {
+      // remove drops
+      if (drop.alpha <= 0) {
+        this.drops.splice(this.drops.indexOf(drop), 1);
+        this.removeChild(drop);
+      }
+      drop.update(delay);
+    });
 
     this.enemies.children.forEach((enemy: DisplayObject) => {
+      // boss level
       if (this.waveCount % 4 === 0) {
-        this.bossShieldLabel.text = `Boss Shield: ${this.bossHP}`;
-        this.bossShieldLabel.anchor.set(0.5);
-        this.bossShieldLabel.x = enemy.position.x + this.enemies.width / 2;
-        this.bossShieldLabel.y = 450; //50
-        this.addChild(this.bossShieldLabel);
+        if (!this.bossHPBar.visible) {
+          this.addChild(this.bossHPBar);
+          this.bossHPBar.visible = true;
+        }
+
         enemy.position.x = Math.floor(
           Manager.width / 2 - this.enemies.width / 2
         );
@@ -360,35 +499,51 @@ export class GameScene extends Container implements IScene {
           Manager.height / 2 - 2 * this.enemies.height
         );
       } else {
+        // normal level enemy movement
         enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
 
+        // enemy out of bounds >>
         if (enemy.position.x + 64 >= Manager.width) {
           this.enemySpeed = this.enemySpeed * -1;
           this.enemies.position.y += 30;
         }
 
+        // enemy out of bounds <<
         if (enemy.position.x < 0) {
           this.enemySpeed = this.enemySpeed * -1;
           this.enemies.position.y += 30;
         }
+      }
 
-        if (enemy.getBounds().intersects(this.player.getBounds())) {
-          this.enemyExplosion(
-            Math.floor(enemy.x) + 32,
-            Math.floor(this.enemies.position.y + enemy.y)
-          );
-          this.effectPlay(this.explosionAudio, 0.01);
-          this.enemies.removeChild(enemy);
-          this.playerLives--;
-          this.enemyCount--;
-          this.score += 10;
-        }
+      // enemy vs player collision
+      if (enemy.getBounds().intersects(this.player.getBounds())) {
+        this.enemyExplosion(
+          Math.floor(enemy.x) + 32,
+          Math.floor(this.enemies.position.y + enemy.y)
+        );
+        this.effectPlay(this.explosionAudio, 0.005);
+        this.enemies.removeChild(enemy);
+        this.playerLives--;
+        this.enemyCount--;
+        this.score += 10;
       }
     });
+
+    if (this.frames === 100000) this.frames = 0;
 
     if (this.waveCount % 3 === 0) this.enemyShipBSNext = this.waveCount + 1;
 
     if (this.frames % 100 === 0 && this.enemyCount > 0) {
+      // garbage check
+      /* console.log(
+        this.enemies.children.length,
+        this.bullets.children.length,
+        this.enemyBullets.length,
+        this.asteroids.length,
+        this.particles.length,
+        this.drops.length
+      ); */
+
       if (this.waveCount % 4 === 0) {
         //
       } else {
@@ -550,98 +705,8 @@ export class GameScene extends Container implements IScene {
     }
 
     if (this.waveCount % 4 === 0 && this.enemyCount > 0) {
-      const segmentWidth = 100 / (this.waveCount * 2);
-      this.removeChild(this.bossHPBar);
-      this.bossHPBar = new Container();
-
-      this.bossHPBarBack.beginFill(0x4287f5);
-      this.bossHPBarBack.lineStyle(2, 0x4287f5);
-      this.bossHPBarBack.drawRect(0, 0, 100, 8);
-      this.bossHPBarBack.endFill();
-      this.bossHPBarBack.position.set(this.width / 2 - 50, 200);
-      this.bossHPBarFront.beginFill(0xf51d45);
-      this.bossHPBarFront.drawRect(0, 0, 100, 8);
-      this.bossHPBarFront.endFill();
-      this.bossHPBarFront.width = this.bossHP * segmentWidth;
-      this.bossHPBarFront.position.set(this.width / 2 - 50, 200);
-
-      this.bossHPBar.addChild(this.bossHPBarBack, this.bossHPBarFront);
-      this.addChild(this.bossHPBar);
-    }
-
-    this.asteroids.forEach((asteroid) => {
-      if (asteroid.getBounds().intersects(this.player.getBounds())) {
-        const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
-          ? 0xffffff
-          : 0x000000;
-        const fillColor = asteroid.texture.textureCacheIds[0].includes("20")
-          ? 0x00a3d9
-          : 0x444444;
-        createParticles(this.particles, asteroid, fillColor, lineColor);
-        this.addChild(...this.particles);
-        this.effectPlay(this.explosionAudio, 0.01);
-        this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
-        this.removeChild(asteroid);
-        this.playerLives--;
-        this.score += 5;
-      }
-
-      if (
-        asteroid.position.x < -50 ||
-        asteroid.position.x > Manager.width ||
-        asteroid.position.y < -50 ||
-        asteroid.position.y > Manager.height
-      ) {
-        this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
-        this.removeChild(asteroid);
-      }
-    });
-
-    this.enemyBullets.forEach((enemyBullet: EnemyBullet) => {
-      if (enemyBullet.getBounds().intersects(this.player.getBounds())) {
-        createParticles(this.particles, enemyBullet, 0xf85c5c, 0xffffff, true);
-        this.addChild(...this.particles);
-        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
-        this.removeChild(enemyBullet);
-        this.effectPlay(this.hitAudio, 0.05);
-        this.playerLives--;
-      }
-
-      if (enemyBullet.position.y > Manager.height) {
-        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
-        this.removeChild(enemyBullet);
-      }
-    });
-
-    if (this.enemyCount === 0) {
-      this.enemyBullets.forEach((enemyBullet: EnemyBullet) => {
-        this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
-        this.removeChild(enemyBullet);
-      });
-      this.timer1.stop();
-      this.timer2.stop();
-      this.timer3.stop();
-      this.waveCount++;
-      this.enemyShipBulletSpeed =
-        this.waveCount === this.enemyShipBSNext && this.enemyShipBulletSpeed < 8
-          ? this.enemyShipBulletSpeed + 2
-          : this.enemyShipBulletSpeed;
-
-      this.removeChild(this.enemies, this.bossHPBar);
-      this.enemies = new Grid(this.waveCount);
-
-      this.startPos = {
-        x: 0 + this.enemies.enemies[0].width / 2,
-        y: 50,
-      };
-      this.enemies.x = this.startPos.x;
-      this.enemies.y = this.enemies.height;
-      this.addChild(this.enemies);
-      this.enemyCount = this.enemies.enemies.length;
-
-      if ((this.waveCount + 1) % 4 === 0) {
-        this.bossHP = (this.waveCount + 1) * 2;
-      }
+      this.segmentWidth = 100 / (this.waveCount * 2);
+      this.bossHPBarFront.width = this.bossHP * this.segmentWidth;
     }
 
     if (this.playerLives <= 0) {
