@@ -1,5 +1,6 @@
+import { sound } from "@pixi/sound";
 import { Container, Graphics, Loader, Sprite, Text } from "pixi.js";
-import { assets } from "../assets";
+import { assets, fonts, sounds } from "../assets";
 import { Manager } from "../Manager";
 import { IScene } from "../types";
 import { MainScene } from "./MainScene";
@@ -82,12 +83,15 @@ export class LoaderScene extends Container implements IScene {
     );
     this.addChild(this.container);
 
+    Loader.shared.add(fonts);
     Loader.shared.add(assets);
 
     Loader.shared.onProgress.add(this.downloadProgress, this);
     Loader.shared.onComplete.once(this.gameLoaded, this);
 
     Loader.shared.load();
+
+    sound.add(sounds);
   }
 
   private downloadProgress = (loader: Loader): void => {

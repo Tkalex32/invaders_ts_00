@@ -26,7 +26,6 @@ export const assets = [
   { name: "resume", url: "./resume.png" },
   { name: "restart", url: "./restart.png" },
   { name: "popup", url: "./popup.png" },
-  { name: "digital", url: "./digitalt.ttf" },
   { name: "asteroid1", url: "./asteroid1.png" },
   { name: "asteroid2", url: "./asteroid2.png" },
   { name: "asteroid3", url: "./asteroid3.png" },
@@ -35,15 +34,6 @@ export const assets = [
   { name: "asteroid202", url: "./asteroid202.png" },
   { name: "asteroid203", url: "./asteroid203.png" },
   { name: "asteroid204", url: "./asteroid204.png" },
-  { name: "laser", url: "./laser.mp3" },
-  { name: "explosion", url: "./explosion.mp3" },
-  { name: "win", url: "./win.mp3" },
-  { name: "lose", url: "./lose.mp3" },
-  { name: "enemyBullet1", url: "./enemyBullet1.wav" },
-  { name: "enemyBullet2", url: "./enemyBullet2.wav" },
-  { name: "enemyBullet3", url: "./enemyBullet3.wav" },
-  { name: "enemyBullet4", url: "./enemyBullet4.wav" },
-  { name: "hit", url: "./hit.wav" },
   { name: "boom01", url: "./boom01.png" },
   { name: "boom02", url: "./boom02.png" },
   { name: "boom03", url: "./boom03.png" },
@@ -56,6 +46,20 @@ export const assets = [
   { name: "boom10", url: "./boom10.png" },
   { name: "boom11", url: "./boom11.png" },
 ];
+
+export const sounds = {
+  laser: "./laser.mp3",
+  explosion: "./explosion.mp3",
+  win: "./win.mp3",
+  lose: "./lose.mp3",
+  enemyBullet1: "./enemyBullet1.wav",
+  enemyBullet2: "./enemyBullet2.wav",
+  enemyBullet3: "./enemyBullet3.wav",
+  enemyBullet4: "./enemyBullet4.wav",
+  hit: "./hit.wav",
+};
+
+export const fonts = [{ name: "digital", url: "./digitalt.ttf" }];
 
 export const explosionFrames = [
   "boom01",

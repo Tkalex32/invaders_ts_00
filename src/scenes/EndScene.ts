@@ -1,4 +1,5 @@
 import { Container, Sprite, Text } from "pixi.js";
+import { effectPlay } from "../helpers/helpers";
 import { Manager } from "../Manager";
 import { IScene, IStorage } from "../types";
 import { MainScene } from "./MainScene";
@@ -21,6 +22,8 @@ export class EndScene extends Container implements IScene {
   private highScore: number = 0;
   private score: number = 0;
   private menuButton: Sprite = Sprite.from("menu");
+  private winAudio: string = "win.mp3";
+  private loseAudio: string = "lose.mp3";
 
   private getHighScore = (): void => {
     const localData: IStorage = Manager.localStorageData;
@@ -149,6 +152,10 @@ export class EndScene extends Container implements IScene {
     this.menuButton.buttonMode = true;
     this.menuButton.on("click", this.startOnClick, this);
 
+    this.highScore > this.score
+      ? effectPlay(this.loseAudio, 0.3)
+      : effectPlay(this.winAudio, 0.3);
+
     this.container.addChild(
       this.background,
       this.title2,
@@ -162,9 +169,11 @@ export class EndScene extends Container implements IScene {
       this.newHS,
       this.versionText
     );
+
     this.highScore > this.score
       ? (this.newHS.visible = false)
       : (this.newHS.visible = true);
+
     this.addChild(this.container);
   }
 

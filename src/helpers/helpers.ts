@@ -1,5 +1,7 @@
+import { sound } from "@pixi/sound";
 import { Graphics, Sprite } from "pixi.js";
 import { Particle } from "../elements/Particle";
+import { Manager } from "../Manager";
 import { IParticle, RandomDropItem } from "../types";
 
 export const createParticles = (
@@ -41,4 +43,15 @@ export const itemDrop: (_dropFrom: string) => RandomDropItem = (
       ? "multishoot"
       : "nothing";
   return drop;
+};
+
+export const effectPlay = (audio: string, volume: number = 0.5): void => {
+  sound.add(audio.split(".")[0], {
+    url: `${audio}`,
+    volume: volume,
+  });
+  sound.play(audio.split(".")[0], {
+    volume: volume,
+    muted: Manager.localStorageData.muteSFX,
+  });
 };

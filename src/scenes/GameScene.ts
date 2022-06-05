@@ -20,7 +20,7 @@ import { Particle } from "../elements/Particle";
 import { Timer } from "eventemitter3-timer";
 import { EndScene } from "./EndScene";
 import { Drop } from "../elements/Drop";
-import { createParticles, itemDrop } from "../helpers/helpers";
+import { createParticles, effectPlay, itemDrop } from "../helpers/helpers";
 import { IScene, RandomDropItem } from "../types";
 
 export class GameScene extends Container implements IScene {
@@ -70,11 +70,10 @@ export class GameScene extends Container implements IScene {
   private asteroids: Asteroid[];
   private particles: Particle[];
   private drops: Drop[];
-  private laserAudio: HTMLAudioElement = new Audio("laser.mp3");
-  private explosionAudio: HTMLAudioElement = new Audio("explosion.mp3");
-  private winAudio: HTMLAudioElement = new Audio("win.mp3");
-  private loseAudio: HTMLAudioElement = new Audio("lose.mp3");
-  private hitAudio: HTMLAudioElement = new Audio("hit.wav");
+  private laserAudio: string = "laser.mp3";
+  private explosionAudio: string = "explosion.mp3";
+
+  private hitAudio: string = "hit.wav";
   private timer1: Timer;
   private timer2: Timer;
   private timer3: Timer;
@@ -90,8 +89,6 @@ export class GameScene extends Container implements IScene {
     this.timer3 = new Timer(1000);
 
     this.background.width = Manager.width;
-    this.winAudio.volume = 0.1;
-    this.loseAudio.volume = 0.1;
 
     this.addEventListeners();
 
@@ -149,14 +146,6 @@ export class GameScene extends Container implements IScene {
       this.scoreLabel
     );
   }
-
-  private effectPlay = (audio: HTMLAudioElement, volume: number = 1) => {
-    audio.pause();
-    audio.currentTime = 0;
-    audio.volume = volume;
-    audio.muted = Manager.localStorageData.muteSFX;
-    audio.play();
-  };
 
   public addEventListeners = (): void => {
     window.addEventListener("keydown", this.onKeyDown.bind(this), false);
@@ -251,7 +240,7 @@ export class GameScene extends Container implements IScene {
         bullet.position.y = this.player.position.y;
         bullet.scale.x = 0.25;
         bullet.scale.y = 0.25;
-        this.effectPlay(this.laserAudio, 0.02);
+        effectPlay(this.laserAudio, 0.15);
         this.bullets.addChild(bullet);
 
         if (bullet.position.x < 0) this.bullets.removeChild(bullet);
@@ -297,7 +286,7 @@ export class GameScene extends Container implements IScene {
               this.bullets.removeChild(bullet);
             } else {
               this.enemyExplosion(enemy.position.x, enemy.position.y);
-              this.effectPlay(this.explosionAudio, 0.005);
+              effectPlay(this.explosionAudio, 0.08);
               this.scoreLabel.text = `Score: ${this.score}`;
               this.enemies.removeChild(enemy);
               this.removeChild(bullet);
@@ -310,7 +299,7 @@ export class GameScene extends Container implements IScene {
               Math.floor(enemy.x) + 32,
               Math.floor(this.enemies.position.y + enemy.y)
             );
-            this.effectPlay(this.explosionAudio, 0.005);
+            effectPlay(this.explosionAudio, 0.08);
             this.enemies.removeChild(enemy);
             this.bullets.removeChild(bullet);
             this.enemyCount--;
@@ -343,7 +332,7 @@ export class GameScene extends Container implements IScene {
           createParticles(this.particles, asteroid, fillColor, lineColor);
 
           this.addChild(...this.particles);
-          this.effectPlay(this.explosionAudio, 0.005);
+          effectPlay(this.explosionAudio, 0.08);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
           this.bullets.removeChild(bullet);
@@ -386,7 +375,7 @@ export class GameScene extends Container implements IScene {
         this.addChild(...this.particles);
         this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
         this.removeChild(enemyBullet);
-        this.effectPlay(this.hitAudio, 0.05);
+        effectPlay(this.hitAudio, 0.15);
         this.playerLives--;
       }
 
@@ -445,7 +434,7 @@ export class GameScene extends Container implements IScene {
             : 0x444444;
           createParticles(this.particles, asteroid, fillColor, lineColor);
           this.addChild(...this.particles);
-          this.effectPlay(this.explosionAudio, 0.005);
+          effectPlay(this.explosionAudio, 0.08);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
           this.playerLives--;
@@ -521,15 +510,13 @@ export class GameScene extends Container implements IScene {
           Math.floor(enemy.x) + 32,
           Math.floor(this.enemies.position.y + enemy.y)
         );
-        this.effectPlay(this.explosionAudio, 0.005);
+        effectPlay(this.explosionAudio, 0.08);
         this.enemies.removeChild(enemy);
         this.playerLives--;
         this.enemyCount--;
         this.score += 10;
       }
     });
-
-    if (this.frames === 100000) this.frames = 0;
 
     if (this.waveCount % 3 === 0) this.enemyShipBSNext = this.waveCount + 1;
 
@@ -586,11 +573,9 @@ export class GameScene extends Container implements IScene {
           this.enemyBullets.push(bullet);
           this.addChild(bullet);
         }
-        const enemyBulletAudio: HTMLAudioElement = new Audio(
-          `enemyBullet${type.slice(-1)}.wav`
-        );
 
-        this.effectPlay(enemyBulletAudio, 0.05);
+        const enemyBulletAudio: string = `enemyBullet${type.slice(-1)}.wav`;
+        effectPlay(enemyBulletAudio, 0.2);
       }
     }
 
@@ -637,10 +622,8 @@ export class GameScene extends Container implements IScene {
       });
       this.enemyBullets.push(bullet);
       this.addChild(bullet);
-      const enemyBulletAudio: HTMLAudioElement = new Audio(
-        `enemyBullet${type}.wav`
-      );
-      this.effectPlay(enemyBulletAudio, 0.05);
+      const enemyBulletAudio: string = `enemyBullet${type}.wav`;
+      effectPlay(enemyBulletAudio, 0.2);
     };
 
     const shoot2 = (): void => {
@@ -662,10 +645,8 @@ export class GameScene extends Container implements IScene {
           this.addChild(bullet);
         });
 
-      const enemyBulletAudio: HTMLAudioElement = new Audio(
-        `enemyBullet${type}.wav`
-      );
-      this.effectPlay(enemyBulletAudio, 0.05);
+      const enemyBulletAudio: string = `enemyBullet${type}.wav`;
+      effectPlay(enemyBulletAudio, 0.2);
     };
 
     const shoot3 = (): void => {
@@ -691,10 +672,8 @@ export class GameScene extends Container implements IScene {
       });
       this.enemyBullets.push(bullet);
       this.addChild(bullet);
-      const enemyBulletAudio: HTMLAudioElement = new Audio(
-        `enemyBullet${type}.wav`
-      );
-      this.effectPlay(enemyBulletAudio, 0.05);
+      const enemyBulletAudio: string = `enemyBullet${type}.wav`;
+      effectPlay(enemyBulletAudio, 0.15);
     };
 
     if (this.frames % 800 === 0 && this.enemyCount > 0) {
@@ -710,10 +689,6 @@ export class GameScene extends Container implements IScene {
     }
 
     if (this.playerLives <= 0) {
-      this.laserAudio.pause();
-      this.laserAudio.currentTime = 0;
-      this.explosionAudio.pause();
-      this.laserAudio.currentTime = 0;
       this.removeChild(
         this.player,
         this.bullets,
@@ -722,7 +697,6 @@ export class GameScene extends Container implements IScene {
         this.scoreLabel
       );
       Manager.changeScene(new EndScene(this.score));
-      this.effectPlay(this.loseAudio, 0.1);
     }
   }
 }
