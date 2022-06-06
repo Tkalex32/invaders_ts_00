@@ -1,9 +1,22 @@
 import { sound } from "@pixi/sound";
 import { Graphics, Sprite } from "pixi.js";
+import { MAX_LIVES } from "../constants";
 import { Particle } from "../elements/Particle";
 import { Manager } from "../Manager";
 import { IParticle, RandomDropItem } from "../types";
 
+/**
+ * Create particle effect
+ *
+ * Using simple random calculation to generate random particles
+ *
+ * @param particles - Particle array
+ * @param object - Object from drop, can be a Sprite, Graphics or an IParticle
+ * @param color - Color of the particle
+ * @param lineColor - Color of the outer line
+ * @param small - If the particle is small
+ * @return Nothing - Particle is added to the particles array
+ */
 export const createParticles = (
   particles: Particle[],
   object: Sprite | Graphics | IParticle,
@@ -30,21 +43,49 @@ export const createParticles = (
     );
 };
 
-export const itemDrop: (_dropFrom: string) => RandomDropItem = (
-  _dropFrom: string
+/**
+ * Calculate the drop item
+ *
+ * Using simple random calculation to generate a random drop item
+ *
+ * @param currentLives - Current lives of the player
+ * @return A random drop item (nothing, heart, shield or multishoot)
+ */
+export const itemDrop: (currentLives: number) => RandomDropItem = (
+  currentLives: number
 ) => {
-  const foo = Math.random();
-  const drop: RandomDropItem =
-    +foo.toFixed(1) === 0
+  const randomNumber: number = Math.random();
+  /* let drop: RandomDropItem =
+    +randomNumber.toFixed(1) === 0
       ? "heart"
-      : +foo.toFixed(1) === 0.1
+      : +randomNumber.toFixed(1) === 0.1
       ? "shield"
-      : +foo.toFixed(1) === 0.2
+      : +randomNumber.toFixed(1) === 0.2
       ? "multishoot"
-      : "nothing";
+      : "nothing"; */
+  // test case for drop item - 100% drop rate, ~90% shield
+  let drop: RandomDropItem =
+    +randomNumber.toFixed(1) < 0.9
+      ? "shield"
+      : +randomNumber.toFixed(1) < 1
+      ? "heart"
+      : "multishoot";
+  console.log(drop, currentLives, MAX_LIVES);
+
+  if (drop === "heart" && currentLives === MAX_LIVES) {
+    drop = +randomNumber.toFixed(1) < 0.5 ? "shield" : "multishoot";
+  }
   return drop;
 };
 
+/**
+ * Play the sound, if not muted
+ *
+ *
+ * @param audio The sound to play
+ * @param volume The volume to play the sound at
+ * @return Returns nothing
+ */
 export const effectPlay = (audio: string, volume: number = 0.5): void => {
   sound.add(audio.split(".")[0], {
     url: `${audio}`,

@@ -45,6 +45,7 @@ export const assets = [
   { name: "boom09", url: "./boom09.png" },
   { name: "boom10", url: "./boom10.png" },
   { name: "boom11", url: "./boom11.png" },
+  { name: "forcefield", url: "./forcefield.png" },
 ];
 
 export const sounds = {
@@ -57,6 +58,10 @@ export const sounds = {
   enemyBullet3: "./enemyBullet3.wav",
   enemyBullet4: "./enemyBullet4.wav",
   hit: "./hit.wav",
+  drop: "./drop.mp3",
+  heartPickUp: "./heartPickUp.mp3",
+  shieldUp: "./shieldUp.ogg",
+  shieldSown: "./shieldSown.ogg",
 };
 
 export const fonts = [{ name: "digital", url: "./digitalt.ttf" }];

@@ -1,5 +1,6 @@
 import { Application } from "@pixi/app";
 import { Timer } from "eventemitter3-timer";
+import { GAME_VERSION } from "./constants";
 import { IScene, IStorage } from "./types";
 
 export class Manager {
@@ -12,7 +13,7 @@ export class Manager {
   private static _width: number;
   private static _height: number;
   private static _localStorageData: IStorage;
-  private static _version: string = "0.0.7 alpha";
+  private static _version: string = GAME_VERSION;
 
   public static get width(): number {
     return Manager._width;

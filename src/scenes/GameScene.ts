@@ -22,6 +22,8 @@ import { EndScene } from "./EndScene";
 import { Drop } from "../elements/Drop";
 import { createParticles, effectPlay, itemDrop } from "../helpers/helpers";
 import { IScene, RandomDropItem } from "../types";
+import * as CONSTANT from "../constants";
+import { ForceField } from "../elements/ForceField";
 
 export class GameScene extends Container implements IScene {
   private pauseOverlay: PauseOverlay = new PauseOverlay();
@@ -29,6 +31,8 @@ export class GameScene extends Container implements IScene {
   private background: Sprite = Sprite.from("background.png");
   private player: Sprite = new PlayerShip();
   private bullets: Container = new Container();
+  private forceField: Sprite = new ForceField();
+  private forcefieldIsActive: boolean;
   private enemies: Grid;
   private startPos: {
     x: number;
@@ -56,12 +60,12 @@ export class GameScene extends Container implements IScene {
   private spawnSpeed: number = 400;
   private keysMaps: { [key: string]: boolean } = {};
   private playerRotation = 0;
-  private playerSpeed: number = 4;
-  private bulletSpeed: number = 15;
+  private playerSpeed: number = CONSTANT.PLAYER_SPEED;
+  private bulletSpeed: number = CONSTANT.BULLET_SPEED;
   private enemyCount: number;
-  private playerLives: number = 3;
-  private enemySpeed: number = 1;
-  private score: number = 0;
+  private playerLives: number = CONSTANT.START_LIVES;
+  private enemySpeed: number = CONSTANT.ENEMY_SPEED;
+  private score: number = CONSTANT.START_SCORE;
   private waveCount: number;
   private enemyShipBulletSpeed: number;
   private enemyShipBSNext: number;
@@ -72,11 +76,13 @@ export class GameScene extends Container implements IScene {
   private drops: Drop[];
   private laserAudio: string = "laser.mp3";
   private explosionAudio: string = "explosion.mp3";
+  private dropAudio: string = "drop.mp3";
 
   private hitAudio: string = "hit.wav";
   private timer1: Timer;
   private timer2: Timer;
   private timer3: Timer;
+  private shieldTimer: Timer;
 
   constructor() {
     super();
@@ -87,6 +93,8 @@ export class GameScene extends Container implements IScene {
     this.timer1 = new Timer(1000);
     this.timer2 = new Timer(1000);
     this.timer3 = new Timer(1000);
+    this.shieldTimer = new Timer(5000);
+    this.forcefieldIsActive = false;
 
     this.background.width = Manager.width;
 
@@ -120,7 +128,7 @@ export class GameScene extends Container implements IScene {
     this.enemies.x = this.startPos.x;
     this.enemies.y = this.enemies.height;
     this.enemyCount = this.enemies.enemies.length;
-    this.enemyShipBulletSpeed = 2;
+    this.enemyShipBulletSpeed = CONSTANT.ENEMY_BULLET_SPEED;
     this.enemyShipBSNext = 0;
     this.enemyBullets = [];
     this.asteroids = [];
@@ -131,6 +139,9 @@ export class GameScene extends Container implements IScene {
     this.player.anchor.set(0.5);
     this.player.x = Manager.width / 2;
     this.player.y = Manager.height - 20;
+
+    this.forceField.x = this.player.x;
+    this.forceField.y = this.player.y;
 
     this.livesLabel.x = Manager.width - this.livesLabel.width - 5;
     this.livesLabel.y = 0;
@@ -167,7 +178,7 @@ export class GameScene extends Container implements IScene {
 
   explosionFrames: Array<String> = explosionFrames;
 
-  enemyExplosion = (x: number, y: number) => {
+  enemyExplosion = (x: number, y: number): void => {
     const explosion: AnimatedSprite = new AnimatedSprite(
       this.explosionFrames.map((str) => Texture.from(str as string))
     );
@@ -186,8 +197,10 @@ export class GameScene extends Container implements IScene {
     };
   };
 
-  public update(delay: number): void {
+  public update = (delay: number): void => {
     this.player.rotation = this.playerRotation;
+    this.forceField.x = this.player.x;
+    this.forceField.y = this.player.y;
 
     this.frames++;
 
@@ -332,25 +345,23 @@ export class GameScene extends Container implements IScene {
           createParticles(this.particles, asteroid, fillColor, lineColor);
 
           this.addChild(...this.particles);
-          effectPlay(this.explosionAudio, 0.08);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
           this.bullets.removeChild(bullet);
           this.score += 5;
-          const drop: RandomDropItem = itemDrop(
-            asteroid.texture.textureCacheIds[0]
-          );
+          const drop: RandomDropItem = itemDrop(this.playerLives);
           if (drop !== "nothing") {
             const dropItem = new Drop(
               asteroid.x + asteroid.width / 2,
               asteroid.y + asteroid.height / 2,
               drop
             );
-            // TODO add effect
-            console.log(drop, dropItem);
-
             this.drops.push(dropItem);
             this.addChild(dropItem);
+            // TODO add effect
+            effectPlay(this.dropAudio, 0.3);
+          } else {
+            effectPlay(this.explosionAudio, 0.08);
           }
         }
       });
@@ -359,16 +370,43 @@ export class GameScene extends Container implements IScene {
     this.drops.forEach((drop: Drop) => {
       // drop vs player collision - pickup
       if (drop.getBounds().intersects(this.player.getBounds())) {
+        if (drop.type === "heart" && this.playerLives < CONSTANT.MAX_LIVES) {
+          this.playerLives++;
+          effectPlay("heartPickUp.mp3", 0.3);
+        } else if (drop.type === "shield") {
+          effectPlay("shieldUp.ogg", 0.3);
+          // if shield is active, add 10 more seconds and scale it up
+          if (this.forcefieldIsActive) {
+            this.shieldTimer.time += 10000;
+            this.forceField.scale.x += 0.5;
+            this.forceField.scale.y += 0.5;
+          } else {
+            // if shield is not active, create shield and start timer
+            this.shieldTimer = new Timer(5000);
+            this.shieldTimer.repeat = 1;
+            this.shieldTimer.on("start", (): void => {
+              this.addChild(this.forceField);
+              this.forceField.visible = true;
+              this.forcefieldIsActive = true;
+            });
+            this.shieldTimer.on("end", (): void => {
+              this.forceField.visible = false;
+              this.forcefieldIsActive = false;
+              this.forceField.scale.set(0.5);
+              this.removeChild(this.forceField);
+              effectPlay("shieldDown.ogg", 0.3);
+            });
+            this.shieldTimer.start();
+          }
+        }
         this.drops.splice(this.drops.indexOf(drop), 1);
         this.removeChild(drop);
-        // TODO add effect, add the powerup to the player
         this.score += 25;
       }
     });
 
     this.enemyBullets.forEach((enemyBullet: EnemyBullet) => {
       enemyBullet.update(delay);
-
       // bullet vs player collision
       if (enemyBullet.getBounds().intersects(this.player.getBounds())) {
         createParticles(this.particles, enemyBullet, 0xf85c5c, 0xffffff, true);
@@ -377,6 +415,15 @@ export class GameScene extends Container implements IScene {
         this.removeChild(enemyBullet);
         effectPlay(this.hitAudio, 0.15);
         this.playerLives--;
+      }
+
+      // bullet vs shield/force field collision
+      if (this.forcefieldIsActive) {
+        if (enemyBullet.getBounds().intersects(this.forceField.getBounds())) {
+          this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
+          this.removeChild(enemyBullet);
+          // TODO add effect
+        }
       }
 
       // bullet out of bounds
@@ -439,7 +486,18 @@ export class GameScene extends Container implements IScene {
           this.removeChild(asteroid);
           this.playerLives--;
           this.score += 5;
-          itemDrop(asteroid.texture.textureCacheIds[0]);
+          itemDrop(this.playerLives);
+        }
+
+        // asteroid vs shield/force field collision
+        if (this.forcefieldIsActive) {
+          if (asteroid.getBounds().intersects(this.forceField.getBounds())) {
+            effectPlay(this.explosionAudio, 0.08);
+            this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+            this.removeChild(asteroid);
+            this.score += 5;
+            // TODO add effect
+          }
         }
 
         // asteroid out of bounds
@@ -515,6 +573,21 @@ export class GameScene extends Container implements IScene {
         this.playerLives--;
         this.enemyCount--;
         this.score += 10;
+      }
+
+      // enemy vs shield/force field collision
+      if (this.forcefieldIsActive) {
+        if (enemy.getBounds().intersects(this.forceField.getBounds())) {
+          this.enemyExplosion(
+            Math.floor(enemy.x) + 32,
+            Math.floor(this.enemies.position.y + enemy.y)
+          );
+          effectPlay(this.explosionAudio, 0.08);
+          this.enemies.removeChild(enemy);
+          this.enemyCount--;
+          this.score += 10;
+          // TODO add effect
+        }
       }
     });
 
@@ -698,5 +771,5 @@ export class GameScene extends Container implements IScene {
       );
       Manager.changeScene(new EndScene(this.score));
     }
-  }
+  };
 }

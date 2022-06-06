@@ -1,0 +1,10 @@
+export const GAME_VERSION: string = "0.0.7 alpha";
+export const GAME_WIDTH: number = 800;
+export const GAME_HEIGHT: number = 600;
+export const START_LIVES: number = 3;
+export const MAX_LIVES: number = 5;
+export const START_SCORE: number = 0;
+export const PLAYER_SPEED: number = 4;
+export const BULLET_SPEED: number = 15;
+export const ENEMY_SPEED: number = 1;
+export const ENEMY_BULLET_SPEED: number = 2;
