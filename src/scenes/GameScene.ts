@@ -53,6 +53,9 @@ export class GameScene extends Container implements IScene {
   private bossHPBar: Container;
   private bossHPBarBack: Graphics;
   private bossHPBarFront: Graphics;
+  private shieldBar: Container;
+  private shieldBarBack: Graphics;
+  private shieldBarFront: Graphics;
   private bossHP: number;
   private segmentWidth: number;
   private isMouseFlag: boolean = false;
@@ -77,12 +80,13 @@ export class GameScene extends Container implements IScene {
   private laserAudio: string = "laser.mp3";
   private explosionAudio: string = "explosion.mp3";
   private dropAudio: string = "drop.mp3";
-
   private hitAudio: string = "hit.wav";
   private timer1: Timer;
   private timer2: Timer;
   private timer3: Timer;
   private shieldTimer: Timer;
+  private shieldCounter: number;
+  private miniShield: Sprite = Sprite.from("shield.png");
 
   constructor() {
     super();
@@ -95,6 +99,12 @@ export class GameScene extends Container implements IScene {
     this.timer3 = new Timer(1000);
     this.shieldTimer = new Timer(5000);
     this.forcefieldIsActive = false;
+    this.shieldCounter = 600;
+    this.miniShield.anchor.set(0.5);
+    this.miniShield.scale.set(0.5);
+    this.miniShield.x = 200;
+    this.miniShield.y = 12;
+    this.miniShield.visible = false;
 
     this.background.width = Manager.width;
 
@@ -116,6 +126,20 @@ export class GameScene extends Container implements IScene {
     this.bossHPBar.position.set(Manager.width / 2 - 50, 200);
     this.bossHPBar.addChild(this.bossHPBarBack, this.bossHPBarFront);
     this.bossHPBar.visible = false;
+
+    this.shieldBar = new Container();
+    this.shieldBarBack = new Graphics();
+    this.shieldBarFront = new Graphics();
+    this.shieldBarBack.beginFill(0x021934);
+    this.shieldBarBack.lineStyle(1, 0x4287f5);
+    this.shieldBarBack.drawRect(0, 0, 100, 8);
+    this.shieldBarBack.endFill();
+    this.shieldBarFront.beginFill(0x4287f5);
+    this.shieldBarFront.drawRect(0, 0, 100, 8);
+    this.shieldBarFront.endFill();
+    this.shieldBar.position.set(220, 7);
+    this.shieldBar.addChild(this.shieldBarBack, this.shieldBarFront);
+    this.shieldBar.visible = false;
 
     this.pauseOverlay.zIndex = 100;
 
@@ -201,6 +225,11 @@ export class GameScene extends Container implements IScene {
     this.player.rotation = this.playerRotation;
     this.forceField.x = this.player.x;
     this.forceField.y = this.player.y;
+
+    if (this.forcefieldIsActive) {
+      this.shieldCounter -= delay;
+      this.shieldBarFront.width = this.shieldCounter / 6;
+    }
 
     this.frames++;
 
@@ -377,23 +406,34 @@ export class GameScene extends Container implements IScene {
           effectPlay("shieldUp.ogg", 0.3);
           // if shield is active, add 10 more seconds and scale it up
           if (this.forcefieldIsActive) {
-            this.shieldTimer.time += 10000;
+            this.shieldTimer.reset();
             this.forceField.scale.x += 0.5;
             this.forceField.scale.y += 0.5;
           } else {
             // if shield is not active, create shield and start timer
             this.shieldTimer = new Timer(5000);
             this.shieldTimer.repeat = 1;
+
             this.shieldTimer.on("start", (): void => {
-              this.addChild(this.forceField);
+              this.addChild(this.forceField, this.miniShield, this.shieldBar);
+              this.shieldCounter = 600;
+              this.shieldBar.visible = true;
+              this.miniShield.visible = true;
               this.forceField.visible = true;
               this.forcefieldIsActive = true;
             });
             this.shieldTimer.on("end", (): void => {
+              this.shieldCounter = 0;
+              this.shieldBar.visible = false;
+              this.miniShield.visible = false;
               this.forceField.visible = false;
               this.forcefieldIsActive = false;
               this.forceField.scale.set(0.5);
-              this.removeChild(this.forceField);
+              this.removeChild(
+                this.forceField,
+                this.miniShield,
+                this.shieldBar
+              );
               effectPlay("shieldDown.ogg", 0.3);
             });
             this.shieldTimer.start();
@@ -562,8 +602,11 @@ export class GameScene extends Container implements IScene {
         }
       }
 
-      // enemy vs player collision
-      if (enemy.getBounds().intersects(this.player.getBounds())) {
+      // enemy (exclude boss) vs player collision
+      if (
+        enemy.getBounds().intersects(this.player.getBounds()) &&
+        this.waveCount % 4 !== 0
+      ) {
         this.enemyExplosion(
           Math.floor(enemy.x) + 32,
           Math.floor(this.enemies.position.y + enemy.y)
@@ -575,8 +618,8 @@ export class GameScene extends Container implements IScene {
         this.score += 10;
       }
 
-      // enemy vs shield/force field collision
-      if (this.forcefieldIsActive) {
+      // enemy (exclude boss) vs shield/force field collision
+      if (this.forcefieldIsActive && this.waveCount % 4 !== 0) {
         if (enemy.getBounds().intersects(this.forceField.getBounds())) {
           this.enemyExplosion(
             Math.floor(enemy.x) + 32,
