@@ -60,8 +60,10 @@ export const sounds = {
   hit: "./hit.wav",
   drop: "./drop.mp3",
   heartPickUp: "./heartPickUp.mp3",
-  shieldUp: "./shieldUp.ogg",
-  shieldSown: "./shieldSown.ogg",
+  shieldUp: "./shieldUp.wav",
+  shieldSown: "./shieldSown.wav",
+  multishootOn: "./multishootOn.ogg",
+  multishootOff: "./multishootOff.ogg",
 };
 
 export const fonts = [{ name: "digital", url: "./digitalt.ttf" }];

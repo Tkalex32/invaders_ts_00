@@ -33,6 +33,7 @@ export class GameScene extends Container implements IScene {
   private bullets: Container = new Container();
   private forceField: Sprite = new ForceField();
   private forcefieldIsActive: boolean;
+  private multishootIsActive: boolean;
   private enemies: Grid;
   private startPos: {
     x: number;
@@ -56,6 +57,9 @@ export class GameScene extends Container implements IScene {
   private shieldBar: Container;
   private shieldBarBack: Graphics;
   private shieldBarFront: Graphics;
+  private multishootBar: Container;
+  private multishootBarBack: Graphics;
+  private multishootBarFront: Graphics;
   private bossHP: number;
   private segmentWidth: number;
   private isMouseFlag: boolean = false;
@@ -85,8 +89,11 @@ export class GameScene extends Container implements IScene {
   private timer2: Timer;
   private timer3: Timer;
   private shieldTimer: Timer;
+  private multishootTimer: Timer;
   private shieldCounter: number;
   private miniShield: Sprite = Sprite.from("shield.png");
+  private multishootCounter: number;
+  private miniMultishoot: Sprite = Sprite.from("multishoot.png");
 
   constructor() {
     super();
@@ -97,6 +104,7 @@ export class GameScene extends Container implements IScene {
     this.timer1 = new Timer(1000);
     this.timer2 = new Timer(1000);
     this.timer3 = new Timer(1000);
+
     this.shieldTimer = new Timer(5000);
     this.forcefieldIsActive = false;
     this.shieldCounter = 600;
@@ -104,7 +112,14 @@ export class GameScene extends Container implements IScene {
     this.miniShield.scale.set(0.5);
     this.miniShield.x = 200;
     this.miniShield.y = 12;
-    this.miniShield.visible = false;
+
+    this.multishootTimer = new Timer(5000);
+    this.multishootIsActive = false;
+    this.multishootCounter = 600;
+    this.miniMultishoot.anchor.set(0.5);
+    this.miniMultishoot.scale.set(0.5);
+    this.miniMultishoot.x = 500;
+    this.miniMultishoot.y = 12;
 
     this.background.width = Manager.width;
 
@@ -137,10 +152,28 @@ export class GameScene extends Container implements IScene {
     this.shieldBarFront.beginFill(0x4287f5);
     this.shieldBarFront.drawRect(0, 0, 100, 8);
     this.shieldBarFront.endFill();
+    this.shieldBarFront.width = 0;
     this.shieldBar.position.set(220, 7);
     this.shieldBar.addChild(this.shieldBarBack, this.shieldBarFront);
-    this.shieldBar.visible = false;
 
+    this.multishootBar = new Container();
+    this.multishootBarBack = new Graphics();
+    this.multishootBarFront = new Graphics();
+    this.multishootBarBack.beginFill(0x021934);
+    this.multishootBarBack.lineStyle(1, 0x7b02a3);
+    this.multishootBarBack.drawRect(0, 0, 100, 8);
+    this.multishootBarBack.endFill();
+    this.multishootBarFront.beginFill(0xc49e04);
+    this.multishootBarFront.drawRect(0, 0, 100, 8);
+    this.multishootBarFront.endFill();
+    this.multishootBarFront.width = 0;
+    this.multishootBar.position.set(520, 7);
+    this.multishootBar.addChild(
+      this.multishootBarBack,
+      this.multishootBarFront
+    );
+
+    // ?
     this.pauseOverlay.zIndex = 100;
 
     this.enemies = new Grid(this.waveCount);
@@ -178,7 +211,11 @@ export class GameScene extends Container implements IScene {
       this.bullets,
       this.enemies,
       this.livesLabel,
-      this.scoreLabel
+      this.scoreLabel,
+      this.multishootBar,
+      this.shieldBar,
+      this.miniMultishoot,
+      this.miniShield
     );
   }
 
@@ -231,7 +268,25 @@ export class GameScene extends Container implements IScene {
       this.shieldBarFront.width = this.shieldCounter / 6;
     }
 
+    if (this.multishootIsActive) {
+      this.multishootCounter -= delay;
+      this.multishootBarFront.width = this.multishootCounter / 6;
+    }
+
     this.frames++;
+
+    // garbage check
+    /* if (this.frames % 100 === 0) {
+      console.log(
+        this.enemies.children.length,
+        this.bullets.children.length,
+        this.enemyBullets.length,
+        this.asteroids.length,
+        this.particles.length,
+        this.drops.length,
+        this.enemies
+      );
+    } */
 
     if (
       (this.keysMaps["ArrowLeft"] || this.keysMaps["KeyA"]) &&
@@ -251,7 +306,7 @@ export class GameScene extends Container implements IScene {
 
     if (
       (this.keysMaps["ArrowUp"] || this.keysMaps["KeyW"]) &&
-      this.player.position.y > 50
+      this.player.position.y > 20
     )
       this.player.position.y -= delay * this.playerSpeed;
 
@@ -403,8 +458,8 @@ export class GameScene extends Container implements IScene {
           this.playerLives++;
           effectPlay("heartPickUp.mp3", 0.3);
         } else if (drop.type === "shield") {
-          effectPlay("shieldUp.ogg", 0.3);
-          // if shield is active, add 10 more seconds and scale it up
+          effectPlay("shieldUp.wav", 0.3);
+          // if shield is active, reset the timer and scale it up the shield
           if (this.forcefieldIsActive) {
             this.shieldTimer.reset();
             this.forceField.scale.x += 0.5;
@@ -417,26 +472,44 @@ export class GameScene extends Container implements IScene {
             this.shieldTimer.on("start", (): void => {
               this.addChild(this.forceField, this.miniShield, this.shieldBar);
               this.shieldCounter = 600;
-              this.shieldBar.visible = true;
-              this.miniShield.visible = true;
               this.forceField.visible = true;
               this.forcefieldIsActive = true;
             });
             this.shieldTimer.on("end", (): void => {
               this.shieldCounter = 0;
-              this.shieldBar.visible = false;
-              this.miniShield.visible = false;
               this.forceField.visible = false;
               this.forcefieldIsActive = false;
               this.forceField.scale.set(0.5);
-              this.removeChild(
-                this.forceField,
-                this.miniShield,
-                this.shieldBar
-              );
-              effectPlay("shieldDown.ogg", 0.3);
+              this.removeChild(this.forceField);
+              effectPlay("shieldDown.wav", 0.3);
             });
             this.shieldTimer.start();
+          }
+        } else if (drop.type === "multishoot") {
+          effectPlay("multishootOn.ogg", 0.3);
+          // if multishoot is active, reset the timer
+          if (this.multishootIsActive) {
+            this.multishootTimer.reset();
+          } else {
+            // if multishoot is not active, activate multishoot and start timer
+            this.multishootTimer = new Timer(5000);
+            this.multishootTimer.repeat = 1;
+
+            this.multishootTimer.on("start", (): void => {
+              this.bulletSpeed *= 2;
+              this.spawnSpeed = 100;
+              this.addChild(this.miniMultishoot, this.multishootBar);
+              this.multishootCounter = 600;
+              this.multishootIsActive = true;
+            });
+            this.multishootTimer.on("end", (): void => {
+              this.bulletSpeed = CONSTANT.BULLET_SPEED;
+              this.spawnSpeed = 400;
+              this.multishootCounter = 0;
+              this.multishootIsActive = false;
+              effectPlay("multishootOff.ogg", 0.3);
+            });
+            this.multishootTimer.start();
           }
         }
         this.drops.splice(this.drops.indexOf(drop), 1);
@@ -472,38 +545,10 @@ export class GameScene extends Container implements IScene {
         this.removeChild(enemyBullet);
       }
 
-      // wave end
+      // wave end, remove bullets
       if (this.enemyCount === 0) {
         this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
         this.removeChild(enemyBullet);
-
-        this.timer1.stop();
-        this.timer2.stop();
-        this.timer3.stop();
-        this.waveCount++;
-        this.enemyShipBulletSpeed =
-          this.waveCount === this.enemyShipBSNext &&
-          this.enemyShipBulletSpeed < 8
-            ? this.enemyShipBulletSpeed + 2
-            : this.enemyShipBulletSpeed;
-
-        this.removeChild(this.enemies, this.bossHPBar);
-        this.bossHPBar.visible = false;
-        this.enemies = new Grid(this.waveCount);
-
-        this.startPos = {
-          x: 0 + this.enemies.enemies[0].width / 2,
-          y: 50,
-        };
-        this.enemies.x = this.startPos.x;
-        this.enemies.y = this.enemies.height;
-        this.addChild(this.enemies);
-        this.enemyCount = this.enemies.enemies.length;
-
-        // set boss hp
-        if ((this.waveCount + 1) % 4 === 0) {
-          this.bossHP = (this.waveCount + 1) * 2;
-        }
       }
     });
 
@@ -637,16 +682,6 @@ export class GameScene extends Container implements IScene {
     if (this.waveCount % 3 === 0) this.enemyShipBSNext = this.waveCount + 1;
 
     if (this.frames % 100 === 0 && this.enemyCount > 0) {
-      // garbage check
-      /* console.log(
-        this.enemies.children.length,
-        this.bullets.children.length,
-        this.enemyBullets.length,
-        this.asteroids.length,
-        this.particles.length,
-        this.drops.length
-      ); */
-
       if (this.waveCount % 4 === 0) {
         //
       } else {
@@ -804,6 +839,37 @@ export class GameScene extends Container implements IScene {
       this.bossHPBarFront.width = this.bossHP * this.segmentWidth;
     }
 
+    // wave end
+    if (this.enemyCount === 0) {
+      this.timer1.stop();
+      this.timer2.stop();
+      this.timer3.stop();
+      this.waveCount++;
+      this.enemyShipBulletSpeed =
+        this.waveCount === this.enemyShipBSNext && this.enemyShipBulletSpeed < 8
+          ? this.enemyShipBulletSpeed + 2
+          : this.enemyShipBulletSpeed;
+
+      this.removeChild(this.enemies, this.bossHPBar);
+      this.bossHPBar.visible = false;
+      this.enemies = new Grid(this.waveCount);
+
+      this.startPos = {
+        x: 0 + this.enemies.enemies[0].width / 2,
+        y: 50,
+      };
+      this.enemies.x = this.startPos.x;
+      this.enemies.y = this.enemies.height;
+      this.addChild(this.enemies);
+      this.enemyCount = this.enemies.enemies.length;
+
+      // set boss hp
+      if ((this.waveCount + 1) % 4 === 0) {
+        this.bossHP = (this.waveCount + 1) * 2;
+      }
+    }
+
+    // player lost and game over
     if (this.playerLives <= 0) {
       this.removeChild(
         this.player,

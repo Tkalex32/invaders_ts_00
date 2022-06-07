@@ -55,22 +55,22 @@ export const itemDrop: (currentLives: number) => RandomDropItem = (
   currentLives: number
 ) => {
   const randomNumber: number = Math.random();
+  // 60% chance to drop
   /* let drop: RandomDropItem =
-    +randomNumber.toFixed(1) === 0
+    +randomNumber.toFixed(1) <= 1
       ? "heart"
-      : +randomNumber.toFixed(1) === 0.1
+      : +randomNumber.toFixed(1) > 1 && +randomNumber.toFixed(1) < 4
       ? "shield"
-      : +randomNumber.toFixed(1) === 0.2
+      : +randomNumber.toFixed(1) >= 4 && +randomNumber.toFixed(1) < 6
       ? "multishoot"
       : "nothing"; */
-  // test case for drop item - 100% drop rate, ~90% shield
+  // test case for drop item - 100% drop rate, 36% multishoot, 18% shield, 46% heart
   let drop: RandomDropItem =
-    +randomNumber.toFixed(1) < 0.9
-      ? "shield"
-      : +randomNumber.toFixed(1) < 1
+    +randomNumber.toFixed(1) < 0.4
+      ? "multishoot"
+      : +randomNumber.toFixed(1) < 0.6
       ? "heart"
-      : "multishoot";
-  console.log(drop, currentLives, MAX_LIVES);
+      : "shield";
 
   if (drop === "heart" && currentLives === MAX_LIVES) {
     drop = +randomNumber.toFixed(1) < 0.5 ? "shield" : "multishoot";
