@@ -527,7 +527,7 @@ export class GameScene extends Container implements IScene {
         this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
         this.removeChild(enemyBullet);
         effectPlay(this.hitAudio, 0.15);
-        this.playerLives--;
+        if (!this.forcefieldIsActive) this.playerLives--;
       }
 
       // bullet vs shield/force field collision
@@ -569,7 +569,7 @@ export class GameScene extends Container implements IScene {
           effectPlay(this.explosionAudio, 0.08);
           this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
           this.removeChild(asteroid);
-          this.playerLives--;
+          if (!this.forcefieldIsActive) this.playerLives--;
           this.score += 5;
           itemDrop(this.playerLives);
         }
@@ -659,7 +659,7 @@ export class GameScene extends Container implements IScene {
         effectPlay(this.explosionAudio, 0.08);
         this.enemies.removeChild(enemy);
         // TODO check if the forcefield is active
-        this.playerLives--;
+        if (!this.forcefieldIsActive) this.playerLives--;
         this.enemyCount--;
         this.score += 10;
       }
