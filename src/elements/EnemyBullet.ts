@@ -20,8 +20,8 @@ export class EnemyBullet extends Sprite {
     this.x = x;
     this.y = y;
     this.speed = speed;
-    const bulletType = type.slice(-1);
-    this.texture = Texture.from(`ebullet${bulletType}`);
+    const bulletType = type.split(".")[0].slice(-1);
+    this.texture = Texture.from(`ebullet${bulletType}.png`);
     this.angle = angle;
   }
 

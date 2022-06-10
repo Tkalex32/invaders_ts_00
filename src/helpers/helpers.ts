@@ -88,7 +88,7 @@ export const itemDrop: (currentLives: number) => RandomDropItem = (
  */
 export const effectPlay = (audio: string, volume: number = 0.5): void => {
   sound.add(audio.split(".")[0], {
-    url: `${audio}`,
+    url: `./sounds/${audio}`,
     volume: volume,
   });
   sound.play(audio.split(".")[0], {

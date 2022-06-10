@@ -9,8 +9,8 @@ export class EndScene extends Container implements IScene {
   private screenHeight: number;
   private version: string;
   private container: Container = new Container();
-  private background: Sprite = Sprite.from("background1");
-  private infoBox: Sprite = Sprite.from("popup");
+  private background: Sprite = Sprite.from("background1.png");
+  private infoBox: Sprite = Sprite.from("popup.png");
   private highScoreLabel: Text;
   private scoreLabel: Text;
   private highScoreText: Text;
@@ -21,7 +21,7 @@ export class EndScene extends Container implements IScene {
   private versionText: Text;
   private highScore: number = 0;
   private score: number = 0;
-  private menuButton: Sprite = Sprite.from("menu");
+  private menuButton: Sprite = Sprite.from("menu.png");
   private winAudio: string = "win.mp3";
   private loseAudio: string = "lose.mp3";
 

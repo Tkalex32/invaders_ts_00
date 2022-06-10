@@ -17,7 +17,9 @@ export class Asteroid extends Sprite {
       Math.floor(Math.random() * 2) === 0 ? 0 : this.directionPre;
     this.asteroidType = Math.floor(Math.random() * 4 + 1);
     const typePrefix: string = Math.floor(Math.random() * 2) === 0 ? "20" : "";
-    this.texture = Texture.from(`asteroid${typePrefix}${this.asteroidType}`);
+    this.texture = Texture.from(
+      `asteroid${typePrefix}${this.asteroidType}.png`
+    );
   }
 
   update(_framesPassed: number): void {

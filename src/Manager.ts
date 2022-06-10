@@ -16,26 +16,26 @@ export class Manager {
   private static _version: string = GAME_VERSION;
 
   public static get width(): number {
-    return Manager._width;
+    return this._width;
   }
   public static get height(): number {
-    return Manager._height;
+    return this._height;
   }
 
   public static get tickerState(): boolean {
-    return Manager.app.ticker.started;
+    return this.app.ticker.started;
   }
 
   public static get localStorageData(): IStorage {
-    return Manager._localStorageData;
+    return this._localStorageData;
   }
 
   public static set localStorageData(data: IStorage) {
-    Manager._localStorageData = data;
+    this._localStorageData = data;
   }
 
   public static get version(): string {
-    return Manager._version;
+    return this._version;
   }
 
   public static initialize = (
@@ -43,15 +43,15 @@ export class Manager {
     height: number,
     background: number
   ): void => {
-    Manager._width = width;
-    Manager._height = height;
-    Manager._localStorageData = {
+    this._width = width;
+    this._height = height;
+    this._localStorageData = {
       highScore: 0,
       muteSFX: false,
     };
-    Manager.loaded = false;
+    this.loaded = false;
 
-    Manager.app = new Application({
+    this.app = new Application({
       view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
       resolution: 4,
       autoDensity: true,
@@ -59,37 +59,37 @@ export class Manager {
       width: width,
       height: height,
     });
-    Manager.app.ticker.add(
-      () => Timer.timerManager.update(Manager.app.ticker.elapsedMS),
+    this.app.ticker.add(
+      () => Timer.timerManager.update(this.app.ticker.elapsedMS),
       this
     );
-    Manager.app.ticker.add(Manager.update);
+    this.app.ticker.add(this.update);
   };
 
   public static changeScene = (newScene: IScene): void => {
-    if (Manager.currentScene) {
-      Manager.app.stage.removeChild(Manager.currentScene);
-      Manager.currentScene.destroy();
+    if (this.currentScene) {
+      this.app.stage.removeChild(this.currentScene);
+      this.currentScene.destroy();
     }
 
-    Manager.currentScene = newScene;
-    Manager.app.stage.addChild(Manager.currentScene);
+    this.currentScene = newScene;
+    this.app.stage.addChild(this.currentScene);
   };
 
   private static update = (framesPassed: number): void => {
-    if (Manager.currentScene) {
-      Manager.currentScene.update(framesPassed);
+    if (this.currentScene) {
+      this.currentScene.update(framesPassed);
     }
 
     if (!this.loaded) this.getLocalStorageData();
   };
 
   public static pause = (): void => {
-    Manager.app.ticker.stop();
+    this.app.ticker.stop();
   };
 
   public static resume = (): void => {
-    Manager.app.ticker.start();
+    this.app.ticker.start();
   };
 
   public static getLocalStorageData = (): void => {
@@ -107,7 +107,7 @@ export class Manager {
   };
 
   public static setLocalStorageData = (value: IStorage): void => {
-    Manager.localStorageData = value;
+    this.localStorageData = value;
   };
 
   public static saveScoreToLocalStorage = (value: number): void => {

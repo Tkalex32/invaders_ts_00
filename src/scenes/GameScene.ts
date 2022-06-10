@@ -658,6 +658,7 @@ export class GameScene extends Container implements IScene {
         );
         effectPlay(this.explosionAudio, 0.08);
         this.enemies.removeChild(enemy);
+        // TODO check if the forcefield is active
         this.playerLives--;
         this.enemyCount--;
         this.score += 10;
@@ -725,7 +726,9 @@ export class GameScene extends Container implements IScene {
           this.addChild(bullet);
         }
 
-        const enemyBulletAudio: string = `enemyBullet${type.slice(-1)}.wav`;
+        const enemyBulletAudio: string = `enemyBullet${type
+          .split(".")[0]
+          .slice(-1)}.wav`;
         effectPlay(enemyBulletAudio, 0.2);
       }
     }
