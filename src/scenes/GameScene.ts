@@ -699,13 +699,13 @@ export class GameScene extends Container implements IScene {
         let angle: number = Math.atan2(dy, dx);
         let bullet: EnemyBullet;
 
-        if (type.slice(-1) === "3") {
+        if (type.split(".")[0].slice(-1) === "3") {
           dx = this.player.position.x - x;
           dy = this.player.position.y - y;
           angle = Math.atan2(dy, dx);
         }
 
-        if (type.slice(-1) === "2") {
+        if (type.split(".")[0].slice(-1) === "2") {
           Array(2)
             .fill(0)
             .forEach((_, i) => {
