@@ -435,7 +435,7 @@ export class GameScene extends Container implements IScene {
           this.score += 5;
           const drop: RandomDropItem = itemDrop(this.playerLives);
           if (drop !== "nothing") {
-            const dropItem = new Drop(
+            const dropItem: Drop = new Drop(
               asteroid.x + asteroid.width / 2,
               asteroid.y + asteroid.height / 2,
               drop
@@ -558,12 +558,14 @@ export class GameScene extends Container implements IScene {
       // asteroid vs player collision
       this.asteroids.forEach((asteroid) => {
         if (asteroid.getBounds().intersects(this.player.getBounds())) {
-          const lineColor = asteroid.texture.textureCacheIds[0].includes("20")
-            ? 0xffffff
-            : 0x000000;
-          const fillColor = asteroid.texture.textureCacheIds[0].includes("20")
-            ? 0x00a3d9
-            : 0x444444;
+          const lineColor: number =
+            asteroid.texture.textureCacheIds[0].includes("20")
+              ? 0xffffff
+              : 0x000000;
+          const fillColor: number =
+            asteroid.texture.textureCacheIds[0].includes("20")
+              ? 0x00a3d9
+              : 0x444444;
           createParticles(this.particles, asteroid, fillColor, lineColor);
           this.addChild(...this.particles);
           effectPlay(this.explosionAudio, 0.08);
@@ -831,7 +833,7 @@ export class GameScene extends Container implements IScene {
     };
 
     if (this.frames % 800 === 0 && this.enemyCount > 0) {
-      const asteroid = new Asteroid();
+      const asteroid: Asteroid = new Asteroid();
       asteroid.scale.set(0.75);
       this.asteroids.push(asteroid);
       this.addChild(asteroid);
