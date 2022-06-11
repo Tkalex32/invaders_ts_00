@@ -881,6 +881,7 @@ export class GameScene extends Container implements IScene {
         this.livesLabel,
         this.scoreLabel
       );
+      this.multishootTimer.stop();
       Manager.changeScene(new EndScene(this.score));
     }
   };
