@@ -1,4 +1,4 @@
-export const GAME_VERSION: string = "0.0.7 alpha";
+export const GAME_VERSION: string = "0.0.8 alpha";
 export const GAME_WIDTH: number = 800;
 export const GAME_HEIGHT: number = 600;
 export const START_LIVES: number = 3;

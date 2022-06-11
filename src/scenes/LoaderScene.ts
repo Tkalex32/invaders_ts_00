@@ -1,5 +1,5 @@
 import { sound } from "@pixi/sound";
-import { Container, Graphics, Loader } from "pixi.js";
+import { Container, Graphics, Loader, Sprite } from "pixi.js";
 import { fonts, sounds } from "../assets";
 import { Manager } from "../Manager";
 import { IScene } from "../types";
@@ -9,6 +9,9 @@ export class LoaderScene extends Container implements IScene {
   private screenWidth: number = Manager.width;
   private screenHeight: number = Manager.height;
   private container: Container = new Container();
+  private background: Sprite = Sprite.from("./images/background1.png");
+  private logo: Sprite = Sprite.from("./images/logo.png");
+  private ptwLogo: Sprite = Sprite.from("./images/ptwLogo.png");
   private loaderBar: Container = new Container();
   private loaderBarWidth: number = this.screenWidth * 0.6;
   private loaderBarBorder: Graphics = new Graphics();
@@ -22,8 +25,15 @@ export class LoaderScene extends Container implements IScene {
 
     sound.add(sounds);
 
+    this.background.width = this.screenWidth;
     this.container.x = 0;
     this.container.y = 0;
+
+    this.logo.x = 269;
+    this.logo.y = 17;
+
+    this.ptwLogo.x = 241;
+    this.ptwLogo.y = 175;
 
     this.loaderBarFill = new Graphics();
     this.loaderBarFill.beginFill(0xbc93ff, 1);
@@ -41,7 +51,12 @@ export class LoaderScene extends Container implements IScene {
     this.loaderBar.position.x = this.screenWidth / 2 - this.loaderBarWidth / 2;
     this.loaderBar.position.y = this.screenHeight - 60;
 
-    this.container.addChild(this.loaderBar);
+    this.container.addChild(
+      this.background,
+      this.logo,
+      this.ptwLogo,
+      this.loaderBar
+    );
     this.addChild(this.container);
 
     Loader.shared.onProgress.add(this.downloadProgress, this);
