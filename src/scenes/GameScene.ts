@@ -340,8 +340,6 @@ export class GameScene extends Container implements IScene {
         effectPlay(this.laserAudio, 0.15);
         this.bullets.addChild(bullet);
 
-        if (bullet.position.x < 0) this.bullets.removeChild(bullet);
-
         this.lastBulletSpawnTime = currentTime;
       }
     }
@@ -540,7 +538,7 @@ export class GameScene extends Container implements IScene {
       }
 
       // bullet out of bounds
-      if (enemyBullet.position.y > Manager.height) {
+      if (enemyBullet.y >= Manager.height) {
         this.enemyBullets.splice(this.enemyBullets.indexOf(enemyBullet), 1);
         this.removeChild(enemyBullet);
       }
@@ -646,6 +644,12 @@ export class GameScene extends Container implements IScene {
         if (enemy.position.x < 0) {
           this.enemySpeed = this.enemySpeed * -1;
           this.enemies.position.y += 30;
+        }
+
+        // enemy reach the horizon
+        if (this.enemies.y >= Manager.height - 100) {
+          // TODO end game
+          console.log("dunno yet");
         }
       }
 

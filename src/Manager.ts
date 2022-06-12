@@ -1,3 +1,4 @@
+import * as PIXI from "pixi.js";
 import { Application } from "@pixi/app";
 import { Timer } from "eventemitter3-timer";
 import { GAME_VERSION } from "./constants";
@@ -18,6 +19,7 @@ export class Manager {
   public static get width(): number {
     return this._width;
   }
+
   public static get height(): number {
     return this._height;
   }
@@ -64,6 +66,12 @@ export class Manager {
       this
     );
     this.app.ticker.add(this.update);
+    this.registerPixiInspector();
+  };
+
+  public static registerPixiInspector = (): void => {
+    (window as any).__PIXI_INSPECTOR_GLOBAL_HOOK__ &&
+      (window as any).__PIXI_INSPECTOR_GLOBAL_HOOK__.register({ PIXI: PIXI });
   };
 
   public static changeScene = (newScene: IScene): void => {

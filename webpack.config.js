@@ -77,6 +77,11 @@ module.exports = (env, argv) => {
         hash: true,
         minify: false,
       }),
+
+      // Pixi Chrome devtools
+      new webpack.ProvidePlugin({
+        PIXI: "pixi.js",
+      }),
     ],
   };
 };
