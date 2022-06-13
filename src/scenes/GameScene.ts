@@ -94,6 +94,13 @@ export class GameScene extends Container implements IScene {
   private miniShield: Sprite = Sprite.from("shield.png");
   private multishootCounter: number;
   private miniMultishoot: Sprite = Sprite.from("multishoot.png");
+  private dangerZone: Graphics = new Graphics();
+  private dangerText: Label = new Label("proximity warning", {
+    fontFamily: "digital",
+    fontSize: 20,
+    fill: 0xffc926,
+    align: "center",
+  });
 
   constructor() {
     super();
@@ -205,6 +212,22 @@ export class GameScene extends Container implements IScene {
     this.scoreLabel.x = 5;
     this.scoreLabel.y = 0;
 
+    this.dangerZone.beginFill(0xff0000);
+    this.dangerZone.drawRect(
+      0,
+      Manager.height - 100,
+      Manager.width,
+      Manager.height
+    );
+    this.dangerZone.endFill();
+    this.dangerZone.alpha = 0.15;
+    this.dangerZone.visible = false;
+
+    this.dangerText.anchor.set(0.5);
+    this.dangerText.x = Manager.width / 2;
+    this.dangerText.y = Manager.height - 90 + this.dangerText.height / 2;
+    this.dangerText.visible = false;
+
     this.addChild(
       this.background,
       this.player,
@@ -215,7 +238,9 @@ export class GameScene extends Container implements IScene {
       this.multishootBar,
       this.shieldBar,
       this.miniMultishoot,
-      this.miniShield
+      this.miniShield,
+      this.dangerZone,
+      this.dangerText
     );
   }
 
@@ -630,6 +655,9 @@ export class GameScene extends Container implements IScene {
         enemy.position.y = Math.floor(
           Manager.height / 2 - 2 * this.enemies.height
         );
+
+        this.dangerZone.visible = false;
+        this.dangerText.visible = false;
       } else {
         // normal level enemy movement
         enemy.position.x = Math.floor((enemy.position.x += this.enemySpeed));
@@ -644,12 +672,6 @@ export class GameScene extends Container implements IScene {
         if (enemy.position.x < 0) {
           this.enemySpeed = this.enemySpeed * -1;
           this.enemies.position.y += 30;
-        }
-
-        // enemy reach the horizon
-        if (this.enemies.y >= Manager.height - 100) {
-          // TODO end game
-          console.log("dunno yet");
         }
       }
 
@@ -685,6 +707,22 @@ export class GameScene extends Container implements IScene {
         }
       }
     });
+
+    // TODO end game if enemies reach the horizon
+
+    // enemy close to the horizon
+    if (this.enemies.getBounds().bottom >= Manager.height - 160) {
+      this.dangerText.visible = true;
+      // TODO add effect
+
+      // turn on/off danger zone and warning
+      if (this.frames % 100 === 0) {
+        this.dangerZone.visible = !this.dangerZone.visible;
+      }
+    } else {
+      this.dangerZone.visible = false;
+      this.dangerText.visible = false;
+    }
 
     if (this.waveCount % 3 === 0) this.enemyShipBSNext = this.waveCount + 1;
 
