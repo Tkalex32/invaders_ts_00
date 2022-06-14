@@ -85,6 +85,7 @@ export class GameScene extends Container implements IScene {
   private explosionAudio: string = "explosion.mp3";
   private dropAudio: string = "drop.mp3";
   private hitAudio: string = "hit.wav";
+  private warningAudio: string = "warning.mp3";
   private timer1: Timer;
   private timer2: Timer;
   private timer3: Timer;
@@ -708,8 +709,6 @@ export class GameScene extends Container implements IScene {
       }
     });
 
-    // TODO end game if enemies reach the horizon
-
     // enemy close to the horizon
     if (this.enemies.getBounds().bottom >= Manager.height - 160) {
       this.dangerText.visible = true;
@@ -718,6 +717,7 @@ export class GameScene extends Container implements IScene {
       // turn on/off danger zone and warning
       if (this.frames % 100 === 0) {
         this.dangerZone.visible = !this.dangerZone.visible;
+        effectPlay(this.warningAudio, 0.2);
       }
     } else {
       this.dangerZone.visible = false;
@@ -917,7 +917,10 @@ export class GameScene extends Container implements IScene {
     }
 
     // player lost and game over
-    if (this.playerLives <= 0) {
+    if (
+      this.playerLives <= 0 ||
+      this.enemies.getBounds().bottom >= Manager.height - 100
+    ) {
       this.removeChild(
         this.player,
         this.bullets,
@@ -926,6 +929,7 @@ export class GameScene extends Container implements IScene {
         this.scoreLabel
       );
       this.multishootTimer.stop();
+      this.shieldTimer.stop();
       Manager.changeScene(new EndScene(this.score));
     }
   };

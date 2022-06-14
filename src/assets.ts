@@ -14,6 +14,7 @@ export const sounds = {
   shieldSown: "./sounds/shieldSown.wav",
   multishootOn: "./sounds/multishootOn.ogg",
   multishootOff: "./sounds/multishootOff.ogg",
+  warning: "./sounds/warning.mp3",
 };
 
 export const fonts = [{ name: "digital", url: "./fonts/digitalt.ttf" }];
